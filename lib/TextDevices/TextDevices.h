@@ -84,8 +84,8 @@ namespace TextDevices {
 
 
     struct Command {
-        char*       original;   // the original command as given by the user
-        char*       body;       // the command as relative to the device
+        const char* original;   // the original command as given by the user
+        const char* body;       // the command as relative to the device
         IDevice*    device;     // the device handling this command
         bool        hasError;   // whether an error was reported for this command
     };

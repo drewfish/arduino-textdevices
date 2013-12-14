@@ -34,6 +34,7 @@ namespace TextDevices {
         static bool
         remove(DeviceList** head, IDevice* device) {
             // FUTURE
+            return false;
         }
 
     };
@@ -146,42 +147,49 @@ namespace TextDevices {
     bool
     RawPin::setInput(bool input) {
         // TODO
+        return false;
     }
 
 
     bool
     RawPin::setPullup(bool pullup) {
         // TODO
+        return false;
     }
 
 
     bool
     RawPin::setType(PinType type) {
         // TODO
+        return false;
     }
 
 
     bool
     RawPin::canRead() {
         // TODO
+        return false;
     }
 
 
     bool
     RawPin::canWrite() {
         // TODO
+        return false;
     }
 
 
     uint32_t
     RawPin::rawRead() {
         // TODO
+        return 0;
     }
 
 
     bool
     RawPin::rawWrite(uint32_t val) {
         // TODO
+        return false;
     }
 
 
@@ -201,8 +209,8 @@ namespace TextDevices {
     RawPin*
     API::getRawPin(Command* command, size_t idx) {
         char buffer[128];
-        if (idx < 0 || idx >= TEXTDEVICES_PINCOUNT) {
-            snprintf(buffer, 128, "unknown raw pin %u", idx);
+        if (idx >= TEXTDEVICES_PINCOUNT) {
+            snprintf(buffer, 128, "unknown raw pin %lu", idx);
             this->error(command, buffer);
             return NULL;
         }
@@ -213,18 +221,21 @@ namespace TextDevices {
     RawPin*
     API::getRawPin(Command* command, const char* id) {
         // TODO
+        return NULL;
     }
 
 
     bool
     API::claimPin(Command* command, RawPin* pin) {
         // TODO
+        return false;
     }
 
 
     bool
     API::unclaimPin(Command* command, RawPin* pin) {
         // TODO
+        return false;
     }
 
 
@@ -249,6 +260,7 @@ namespace TextDevices {
             this->_d->stream->print(" WHEN ");
             this->_d->stream->print(command->original);
         }
+        return true;
     }
 
 

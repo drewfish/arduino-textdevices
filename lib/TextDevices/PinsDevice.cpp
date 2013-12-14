@@ -41,6 +41,7 @@ namespace TextDevices {
     bool
     PinDevice::dispatch(API* api, Command* command) {
         // TODO
+        return false;
     }
 
 
@@ -75,6 +76,7 @@ namespace TextDevices {
     bool
     PinsDevice::dispatch(API* api, Command* command) {
         // TODO
+        return false;
     }
 
 
