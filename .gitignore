@@ -1,3 +1,4 @@
 .build
 *.o
 test/TestPinsDevice
+test2/tests
