@@ -51,12 +51,10 @@ namespace TextDevices {
     // in the command is assumed.
     class API {
         private:
+            friend class Devices;
             _Devices*   _d;
-        public:
-            // Please don't create yourself.  This is created by this libraray.
-            // TODO: Figure out how to make this private and yet still mockable.
             API(_Devices*);
-
+        public:
             // given the pin number, returns the raw pin object
             // if invalid id, reports error and returns null
             RawPin* getRawPin(Command*, size_t);
