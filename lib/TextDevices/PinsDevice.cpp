@@ -132,8 +132,8 @@ namespace TextDevices {
 
 
     PinDevice*
-    PinsDevice::getPin(uint8_t p) {
-        return &(this->pins[p]);
+    PinsDevice::getPin(uint8_t pin) {
+        return &(this->pins[pin]);
     }
 
 

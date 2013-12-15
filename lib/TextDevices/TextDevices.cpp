@@ -51,6 +51,8 @@ namespace TextDevices {
         DeviceList* registered;    // registered devices
         PinsDevice* pinsDevice;
         Stream*     stream;
+        char        streamBuffer[128];
+        size_t      streamBufferNext;
 
 
         _Devices() :
@@ -58,6 +60,8 @@ namespace TextDevices {
             pinsDevice(NULL),
             stream(NULL)
         {
+            this->streamBuffer[0] = 0;
+            this->streamBufferNext = 0;
             this->pinsDevice = new PinsDevice();
         }
 
@@ -237,20 +241,26 @@ namespace TextDevices {
 
 
     bool
-    dispatch(Command* command) {
-        //TODO
-        //  foreach registered device
-        //      command.device = device
-        //      if device.dispatch(this, command)
-        //          return true
-        //  return false
+    API::dispatch(Command* command) {
+        DeviceList* d = this->_d->registered;
+        while (d) {
+            command->device = d->device;
+            if (d->device->dispatch(this, command)) {
+                return true;
+            }
+            d = d->next;
+        }
         return false;
     }
 
 
     void
     API::println(Command* command, const char* msg) {
-        // TODO
+        // TODO -- decide if command automatically has device name prefixed
+        //this->_d->stream->print(command->device->getDeviceName());
+        //this->_d->stream->print(" ");
+        // TODO -- uppercase everything
+        this->_d->stream->println(msg);
     }
 
 
@@ -269,6 +279,7 @@ namespace TextDevices {
             this->_d->stream->print(" WHEN ");
             this->_d->stream->print(command->original);
         }
+        this->_d->stream->println("");
         return true;
     }
 
@@ -330,10 +341,47 @@ namespace TextDevices {
     
     void
     Devices::loop() {
-        //TODO
-        //  poll
-        //  read from stream
-        //      dispatch command if ready
+        Command command;
+
+        // poll
+        uint32_t now = millis();
+        command.original = "poll";
+        command.body = command.original;
+        command.device = NULL;
+        command.hasError = false;
+        DeviceList* d = this->_d->registered;
+        while (d) {
+            command.device = d->device;
+            d->device->poll(this->api, &command, now);
+            d = d->next;
+        }
+
+        while (this->_d->stream->available() > 0) {
+            char c = char(this->_d->stream->read());
+
+            if ('\n' == c) {
+                // dispatch the command
+                command.original = this->_d->streamBuffer;
+                command.body = command.original;
+                command.device = NULL;
+                command.hasError = false;
+                this->api->dispatch(&command);
+
+                // reset buffer
+                this->_d->streamBuffer[0] = 0;
+                this->_d->streamBufferNext = 0;
+                continue;
+            }
+
+            // buffer the serial input
+            this->_d->streamBuffer[this->_d->streamBufferNext] = c;
+            this->_d->streamBufferNext++;
+            this->_d->streamBuffer[this->_d->streamBufferNext] = 0;
+            if (this->_d->streamBufferNext >= 128) {
+                // don't overflow buffer!!!
+                break;
+            }
+        }
     }
 
 
