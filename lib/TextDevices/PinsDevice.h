@@ -15,6 +15,10 @@ namespace TextDevices {
             void deviceRegistered(API*, Command*);
             void poll(API*, Command*, uint32_t);
             bool dispatch(API*, Command*);
+        private:
+            bool config(API*, Command*, const char*);
+            bool read(API*, Command*);
+            bool write(API*, Command*, uint32_t);
     };
 
     class PinsDevice: public IDevice {

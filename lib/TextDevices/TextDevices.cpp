@@ -131,11 +131,6 @@ namespace TextDevices {
         }
 
 
-        void
-        dispatch(const char* buffer) {
-            // TODO
-        }
-
     };
 
 
@@ -221,6 +216,7 @@ namespace TextDevices {
     RawPin*
     API::getRawPin(Command* command, const char* id) {
         // TODO
+        // if invalid id, send error and return null
         return NULL;
     }
 
@@ -228,6 +224,7 @@ namespace TextDevices {
     bool
     API::claimPin(Command* command, RawPin* pin) {
         // TODO
+        // if pin already claimed, send error and return false
         return false;
     }
 
@@ -235,6 +232,18 @@ namespace TextDevices {
     bool
     API::unclaimPin(Command* command, RawPin* pin) {
         // TODO
+        return false;
+    }
+
+
+    bool
+    dispatch(Command* command) {
+        //TODO
+        //  foreach registered device
+        //      command.device = device
+        //      if device.dispatch(this, command)
+        //          return true
+        //  return false
         return false;
     }
 
@@ -321,10 +330,10 @@ namespace TextDevices {
     
     void
     Devices::loop() {
-        // TODO
-        // poll
-        // read from stream
-        // dispatch command if ready
+        //TODO
+        //  poll
+        //  read from stream
+        //      dispatch command if ready
     }
 
 

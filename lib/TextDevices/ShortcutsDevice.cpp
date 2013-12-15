@@ -22,22 +22,16 @@ namespace TextDevices {
 
     bool
     ShortcutsDevice::dispatch(API* api, Command* command) {
-        // TODO
+        //TODO
         // "read {pin}"
-            // assign to api.pins (PinsDevice)
-            // rewrite to "pin {pin} read"
-            // dispatch to api.pins
+            // dispatch "pin {pin} read" to api.pins
         // "write {pin} {value}"
-            // assign to api.pins (PinsDevice)
-            // rewrite to "pin {pin} write {value}"
-            // dispatch to api.pins
+            // dispatch "pin {pin} write {value}" to api.pins
         // "pwm {pin} {value}"
-            // assign to api.pins (PinsDevice)
-            // rewrite to "pin d{pin} config analog output"
-            // dispatch to api.pins
+            // dispatch "pin d{pin} config analog output" to api.pins
             // check for error
-            // rewrite to "pin d{pin} write {value}"
-            // dispatch to api.pins
+            // dispatch "pin d{pin} write {value}" to api.pins
+        return false;
     }
 
 

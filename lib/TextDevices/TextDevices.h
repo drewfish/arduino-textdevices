@@ -51,10 +51,11 @@ namespace TextDevices {
     // in the command is assumed.
     class API {
         private:
-            friend class Devices;
             _Devices*   _d;
-            API(_Devices*);
         public:
+            // Please don't create yourself.  This is created by this libraray.
+            // TODO: Figure out how to make this private and yet still mockable.
+            API(_Devices*);
 
             // given the pin number, returns the raw pin object
             // if invalid id, reports error and returns null
@@ -70,6 +71,11 @@ namespace TextDevices {
 
             // releases claim to the pin
             bool unclaimPin(Command*, RawPin*);
+
+            // Dispatches a command to all the registered devices,
+            // one at a time, until one device handles it.
+            // Returns true if the command was handled.
+            bool dispatch(Command*);
 
             // sends output to the user
             void println(Command*, const char*);
@@ -129,7 +135,6 @@ namespace TextDevices {
         private:
             void setupPins();
             void setupDefaultDevices();
-            bool dispatch(const char*);
     };
 
 
