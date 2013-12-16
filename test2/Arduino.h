@@ -19,9 +19,21 @@
 using namespace std;
 
 
+
+//-----------------------------------------------------------------------
+// pins_arduino.h
+//-----------------------------------------------------------------------
+
 #define NUM_DIGITAL_PINS 20
 #define NUM_ANALOG_INPUTS 6
+#define digitalPinHasPWM(p)         ((p) == 3 || (p) == 5 || (p) == 6 || (p) == 9 || (p) == 10 || (p) == 11)
 
+
+
+//-----------------------------------------------------------------------
+// mock arduino hooks
+// (more below)
+//-----------------------------------------------------------------------
 
 unsigned long           Arduino_millis;
 vector< deque<bool> >   Arduino_digitalRead(14);
@@ -29,18 +41,6 @@ vector< deque<int> >    Arduino_analogRead(6);
 deque<int>              Arduino_Serial_input;
 vector<string>          Arduino_changes;
 
-
-void
-Arduino_reset() {
-    Arduino_millis = 4000;  // in practice the device takes some time to boot
-    for (size_t i = 0; i < 14; i++) {
-        Arduino_digitalRead[i].clear();
-    }
-    for (size_t i = 0; i < 6; i++) {
-        Arduino_analogRead[i].clear();
-    }
-    Arduino_changes.clear();
-}
 
 void
 Arduino_set_input(const char* str) {
@@ -53,20 +53,23 @@ Arduino_set_input(const char* str) {
 
 void
 Arduino_changes_dump() {
+    cout << "--------------------------------------------- CHANGES " << Arduino_changes.size() << endl;
     for (size_t i = 0; i < Arduino_changes.size(); i++) {
         cout << Arduino_changes[i] << endl;
     }
+    cout << "---------------------------------------------" << endl;
 }
 
 
 //-----------------------------------------------------------------------
-// Constance
+// Constants
 //-----------------------------------------------------------------------
+
 #define LOW     0x0
 #define HIGH    0x1
 #define INPUT           0x0
 #define OUTPUT          0x1
-#define OUTPUT_PULLUP   0x2
+#define INPUT_PULLUP    0x2
 
 
 
@@ -76,23 +79,17 @@ Arduino_changes_dump() {
 
 void
 pinMode(uint8_t pin, uint8_t mode) {
-    string s = "ARDUINO-- pinMode(";
-    s += pin;
-    s += ",";
-    s += mode;
-    s += ")";
-    Arduino_changes.push_back(s);
+    char buffer[128];
+    snprintf(buffer, 128, "ARDUINO-- pinMode(%d,%d)", pin, mode);
+    Arduino_changes.push_back(string(buffer));
 }
 
 
 void
 digitalWrite(uint8_t pin, uint8_t value) {
-    string s = "ARDUINO-- digitalWrite(";
-    s += pin;
-    s += ",";
-    s += value;
-    s += ")";
-    Arduino_changes.push_back(s);
+    char buffer[128];
+    snprintf(buffer, 128, "ARDUINO-- digitalWrite(%d,%d)", pin, value);
+    Arduino_changes.push_back(string(buffer));
 }
 
 
@@ -233,6 +230,26 @@ struct Stream {
 
 };
 Stream Serial;
+
+
+
+//-----------------------------------------------------------------------
+// mock arduino hooks
+// (more above)
+//-----------------------------------------------------------------------
+
+void
+Arduino_reset() {
+    Arduino_millis = 4000;  // in practice the device takes some time to boot
+    for (size_t i = 0; i < 14; i++) {
+        Arduino_digitalRead[i].clear();
+    }
+    for (size_t i = 0; i < 6; i++) {
+        Arduino_analogRead[i].clear();
+    }
+    Arduino_changes.clear();
+    Serial.output.clear();
+}
 
 
 

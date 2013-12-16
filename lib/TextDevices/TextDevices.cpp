@@ -37,12 +37,23 @@ namespace TextDevices {
             return false;
         }
 
+
+        // TODO -- we really only care about leaking this memory while testing
+        // (since on-device these objects lives until the device reboots)
+        ~DeviceList() {
+            if (this->next) {
+                delete this->next;
+                this->next = NULL;
+            }
+            delete this->device;
+        }
+
     };
 
 
 
     //-----------------------------------------------------------------------
-    // _Device class
+    // _Devices class
     // internal implementation of public Devices class
     //-----------------------------------------------------------------------
 
@@ -66,10 +77,16 @@ namespace TextDevices {
         }
 
 
+        // TODO -- we really only care about leaking this memory while testing
+        // (since on-device these objects lives until the device reboots)
         ~_Devices() {
-            if (this->pinsDevice) {
-                delete this->pinsDevice;
-                this->pinsDevice = NULL;
+            // owned by the registered device list
+            this->pinsDevice = NULL;
+
+            // clear device list
+            if (this->registered) {
+                delete this->registered;
+                this->registered = NULL;
             }
         }
 
@@ -145,21 +162,99 @@ namespace TextDevices {
 
     bool
     RawPin::setInput(bool input) {
-        // TODO
-        return false;
+        if (input == this->ioInput) {
+            // nothing to do
+            return true;
+        }
+        this->ioInput = input;
+        if (this->ioInput) {
+            if (this->ioPullup) {
+                pinMode(this->hwPin, INPUT);
+            }
+            else {
+                pinMode(this->hwPin, INPUT_PULLUP);
+            }
+        } else {
+            pinMode(this->hwPin, OUTPUT);
+        }
+        return true;
     }
 
 
     bool
     RawPin::setPullup(bool pullup) {
-        // TODO
-        return false;
+        if (pullup == this->ioPullup) {
+            // nothing to do
+            return true;
+        }
+        if (! this->ioInput) {
+            return false;
+        }
+        if (ANALOG == this->ioType) {
+            if (pullup) {
+                // can't set pullup on an analog-configured pin
+                return false;
+            }
+            return true;
+        }
+        this->ioPullup = pullup;
+        if (this->ioInput) {
+            pinMode(this->hwPin, this->ioPullup ? INPUT_PULLUP : INPUT);
+        }
+        return true;
     }
 
 
     bool
     RawPin::setType(PinType type) {
-        // TODO
+        if (type == this->ioType) {
+            // nothing to do
+            return true;
+        }
+        if (DIGITAL == this->idType) {
+            if (DIGITAL == this->ioType) {
+                if (this->ioInput) {
+                    // di->ai -- ERROR digital pin can never analog input
+                    return false;
+                }
+                else {
+                    // do->ao -- check PWM
+                    if(digitalPinHasPWM(this->hwPin)) {
+                        // nothing special to initialized PWM
+                        return true;
+                    }
+                    else {
+                        // ERROR digital pin doesn't support analogWrite()
+                        return false;
+                    }
+                }
+            }
+            else {
+                // ai->di -- INTERNAL ERROR shouldn't ever get to analog-input state on a digital pin
+                // ao->do -- pinMode(this->hwPin, OUTPUT)
+                pinMode(this->hwPin, OUTPUT);
+                return true;
+            }
+        }
+        // ANALOG == this->idType
+        else {
+            if (DIGITAL == this->ioType) {
+                // di->ai -- ERROR can't undigital an analog pin
+                // do->ao -- ERROR can't undigital an analog pin
+                return false;
+            }
+            else {
+                this->ioType = type;
+                if (this->ioInput) {
+                    pinMode(this->hwPin, this->ioPullup ? INPUT_PULLUP : INPUT);
+                    return true;
+                }
+                else {
+                    pinMode(this->hwPin, OUTPUT);
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -207,35 +302,62 @@ namespace TextDevices {
 
     RawPin*
     API::getRawPin(Command* command, size_t idx) {
-        char buffer[128];
         if (idx >= TEXTDEVICES_PINCOUNT) {
-            snprintf(buffer, 128, "unknown raw pin %lu", idx);
-            this->error(command, buffer);
+            this->error(command, "unknown pin");
             return NULL;
         }
         return &(this->_d->pins[idx]);
     }
 
 
+    //  \d+     digital pin
+    // d\d+     digital pin
+    // a\d+     analog pin
     RawPin*
     API::getRawPin(Command* command, const char* id) {
-        // TODO
-        // if invalid id, send error and return null
+        uint8_t num;
+        PinType type;
+        if (1 == sscanf(id, "d%hhu", &num)) {
+            type = DIGITAL;
+        } else if (1 == sscanf(id, "a%hhu", &num)) {
+            type = ANALOG;
+        } else if (1 == sscanf(id, "%hhu", &num)) {
+            type = DIGITAL;
+        } else {
+            this->error(command, "unknown pin");
+            return NULL;
+        }
+        for (size_t p = 0; p < TEXTDEVICES_PINCOUNT; p++) {
+            RawPin *pin = &(this->_d->pins[p]);
+            if (pin->idType == type && pin->idNum == num) {
+                return pin;
+            }
+        }
+        this->error(command, "unknown pin");
         return NULL;
     }
 
 
     bool
     API::claimPin(Command* command, RawPin* pin) {
-        // TODO
-        // if pin already claimed, send error and return false
-        return false;
+        if (pin->claimDevice == command->device) {
+            // nothing to do
+            return true;
+        }
+        if (pin->claimDevice != pin->pinDevice) {
+            char msg[128];
+            snprintf(msg, 128, "pin %s already claimed by %s", pin->id, pin->claimDevice->getDeviceName());
+            this->error(command, msg);
+            return false;
+        }
+        pin->claimDevice = command->device;
+        return true;
     }
 
 
     bool
     API::unclaimPin(Command* command, RawPin* pin) {
-        // TODO
+        pin->claimDevice = pin->pinDevice;
         return false;
     }
 
@@ -259,7 +381,7 @@ namespace TextDevices {
         // TODO -- decide if command automatically has device name prefixed
         //this->_d->stream->print(command->device->getDeviceName());
         //this->_d->stream->print(" ");
-        // TODO -- uppercase everything
+        // TODO -- uppercase msg
         this->_d->stream->println(msg);
     }
 
@@ -361,6 +483,7 @@ namespace TextDevices {
 
             if ('\n' == c) {
                 // dispatch the command
+                // TODO -- lowercase buffer
                 command.original = this->_d->streamBuffer;
                 command.body = command.original;
                 command.device = NULL;

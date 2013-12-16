@@ -39,35 +39,72 @@ namespace TextDevices {
 
     bool
     PinDevice::dispatch(API* api, Command* command) {
-        //TODO
-        //  if command starts with "config"
-        //      return this.config
-        //  if command is "read"
-        //      return this.read
-        //  if command is "write {value}
-        //      sscanf {value}
-        //      return this.write {value}
-        //  else
-        //      return false
+        if (0 == strncmp("config ", command->body, 7)) {
+            return this->config(api, command, command->body + 7);
+        }
+        if (0 == strncmp("read", command->body, 4)) {
+            return this->read(api, command);
+        }
+        uint32_t value;
+        if (1 == sscanf(command->body, "write %u", &value)) {
+            return this->write(api, command, value);
+        }
         return false;
     }
 
 
     bool
     PinDevice::config(API* api, Command* command, const char* body) {
-        //TODO
-        //  claim pin || return
-        //  if command body has input/in/output/out/input_pullup/pullup/pu
-        //      pin setInput || return error can't set pin IO
-        //      pin setPullup || return error can't set pin pullup
-        //  if command body has digital/d/analog/a
-        //      pin setType || return error can't set pin type
-        return false;
+        PinType type    = this->pin->ioType;
+        bool    input   = this->pin->ioInput;
+        bool    pullup  = this->pin->ioPullup;
+        char token[16];
+        int offset;
+        while (1 == sscanf(body, "%16s%n", token, &offset)) {
+            body += offset;
+            if (0 == strncmp("out", token, 3)) {
+                input = false;
+                pullup = false;
+                continue;
+            }
+            if (0 == strncmp("in", token, 2)) {
+                input = true;
+                pullup = false;
+                continue;
+            }
+            if (0 == strncmp("pu", token, 2)) {
+                input = true;
+                pullup = true;
+                continue;
+            }
+            if (0 == strncmp("d", token, 1)) {
+                type = DIGITAL;
+                continue;
+            }
+            if (0 == strncmp("a", token, 1)) {
+                type = ANALOG;
+                continue;
+            }
+        }
+        if (! this->pin->setType(type)) {
+            api->error(command, "can't set type");
+            return true;
+        }
+        if (! this->pin->setInput(input)) {
+            api->error(command, "can't set input/output");
+            return true;
+        }
+        if (! this->pin->setPullup(pullup)) {
+            api->error(command, "can't set pullup");
+            return true;
+        }
+        return true;
     }
 
 
     bool
     PinDevice::read(API* api, Command* command) {
+        //cout << "======TODO====== PinDevice::read() --pin=" << this->pin->id << endl;
         //TODO
         //  check if owns pin
         //  set to input, if necessary
@@ -80,6 +117,7 @@ namespace TextDevices {
 
     bool
     PinDevice::write(API* api, Command* command, uint32_t value) {
+        //cout << "======TODO====== PinDevice::config() --pin=" << this->pin->id << " --value" << value << endl;
         //TODO
         //  check if owns pin
         //  check if value constrained to pin.ioType
@@ -120,13 +158,19 @@ namespace TextDevices {
 
     bool
     PinsDevice::dispatch(API* api, Command* command) {
-        //TODO
-        //  sscanf "pin {pin}" from command body
-        //  raw = api.getRawPin {pin} || return
-        //  pinDev = pins[raw.idx]
-        //  command.body skip "pin {pin}"
-        //  command.device = pinDev
-        //  return pinDev.dispatch(api, command)
+        char pinId[4];
+        int offset;
+        if (1 == sscanf(command->body, "pin %3s %n", pinId, &offset)) {
+            RawPin *pinRaw = api->getRawPin(command, pinId);
+            if (!pinRaw) {
+                // api->getRawPin() will have reported an error already
+                return true;
+            }
+            PinDevice *pinDev = &(this->pins[pinRaw->idx]);
+            command->body += offset;
+            command->device = pinDev;
+            return pinDev->dispatch(api, command);
+        }
         return false;
     }
 

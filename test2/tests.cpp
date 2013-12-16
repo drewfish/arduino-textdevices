@@ -10,6 +10,7 @@
 #include "ShortcutsDevice.cpp"
 #include "PinsDevice.cpp"
 
+using namespace std;
 using namespace TextDevices;
 
 
@@ -28,16 +29,29 @@ TEST_GROUP(PinsDevice) {
     void setup() {
         Arduino_reset();
     }
+    void teardown() {
+        // TODO -- so we don't leak memory ?
+        Arduino_reset();
+    }
 };
 
 
-TEST(PinsDevice, config) {
-    Arduino_set_input("pin d0 config input\n");
+TEST(PinsDevice, digital_config_input) {
     Devices devices;
     devices.setup(&Serial);
+    Arduino_set_input("pin d0 config input\n");
     devices.loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "no changes change");
+}
 
-    FAIL("TODO -- figure out tests for PinsDevice");
+
+TEST(PinsDevice, digital_config_output) {
+    Devices devices;
+    devices.setup(&Serial);
+    Arduino_set_input("pin d0 config output\n");
+    devices.loop();
+    CHECK_TEXT(1 == Arduino_changes.size(), "just one change");
+    STRCMP_EQUAL("ARDUINO-- pinMode(0,1)", Arduino_changes[0].c_str());
 }
 
 
