@@ -16,7 +16,6 @@ namespace TextDevices {
     class Devices;
     class _Devices; // internal implementation of Devices class
     class PinsDevice;
-    class PinDevice;
 
     typedef enum { DIGITAL, ANALOG } PinType;
 
@@ -25,23 +24,15 @@ namespace TextDevices {
     struct RawPin {
         uint8_t     idx;        // index in arrays
         uint8_t     hwPin;      // digital pin number (which analog pins can be as well)
-        //FUTURE uint8_t     hwPort;
-        //FUTURE uint8_t     hwMask;
         char        id[4];      // textual identifier
         PinType     idType;     // base type of the pin
         uint8_t     idNum;      // number for the type
         PinType     ioType;     // how the pin is configured
         bool        ioInput;    // whether the pin is configured for input
-        bool        ioPullup;   // whether the pullup resister is enabled during input
-        IDevice*    claimDevice;    // device which has a claim on the pin
-        IDevice*    pinDevice;      // default owner of the device
-        bool        setInput(bool);
-        bool        setPullup(bool);
-        bool        setType(PinType);
-        bool        canRead();
-        bool        canWrite();
+        IDevice*    claimant;   // device which has a claim on the pin
+        // be sure to check ioInput before using either of these
         uint32_t    rawRead();
-        bool        rawWrite(uint32_t);
+        void        rawWrite(uint32_t);
     };
 
 
@@ -82,8 +73,6 @@ namespace TextDevices {
             // automatically includes original command
             // always returns true
             bool error(Command*, const char*);
-
-            PinsDevice* getPinsDevice(Command*);
     };
 
 

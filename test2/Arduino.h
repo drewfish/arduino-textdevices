@@ -108,9 +108,17 @@ digitalRead(uint8_t pin) {
 // FUTURE
 //      void analogReference(uint8_t mode)
 
-// TODO
-//      int analogRead(uint8_t pin)
-//      void analogWrite(uint8_t pin, int value)
+int
+analogRead(uint8_t pin) {
+    // TODO
+    return 0;
+}
+
+
+void
+analogWrite(uint8_t pin, int value) {
+    // TODO
+}
 
 
 

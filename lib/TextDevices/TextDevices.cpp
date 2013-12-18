@@ -117,7 +117,6 @@ namespace TextDevices {
                     pin->ioType = DIGITAL;
                     // defaults according to http://arduino.cc/en/Tutorial/DigitalPins
                     pin->ioInput = true;
-                    pin->ioPullup = false;
                 }
                 else {
                     pin->idType = ANALOG;
@@ -125,10 +124,8 @@ namespace TextDevices {
                     snprintf(pin->id, 4, "a%02u", pin->idNum);
                     pin->ioType = ANALOG;
                     pin->ioInput = true;
-                    pin->ioPullup = false;
                 }
-                pin->claimDevice = NULL;
-                pin->pinDevice = this->pinsDevice->getPin(pin->idx);
+                pin->claimant = NULL;
             }
         }
 
@@ -160,130 +157,26 @@ namespace TextDevices {
     // RawPin class
     //-----------------------------------------------------------------------
 
-    bool
-    RawPin::setInput(bool input) {
-        if (input == this->ioInput) {
-            // nothing to do
-            return true;
-        }
-        this->ioInput = input;
-        if (this->ioInput) {
-            if (this->ioPullup) {
-                pinMode(this->hwPin, INPUT);
-            }
-            else {
-                pinMode(this->hwPin, INPUT_PULLUP);
-            }
-        } else {
-            pinMode(this->hwPin, OUTPUT);
-        }
-        return true;
-    }
-
-
-    bool
-    RawPin::setPullup(bool pullup) {
-        if (pullup == this->ioPullup) {
-            // nothing to do
-            return true;
-        }
-        if (! this->ioInput) {
-            return false;
-        }
-        if (ANALOG == this->ioType) {
-            if (pullup) {
-                // can't set pullup on an analog-configured pin
-                return false;
-            }
-            return true;
-        }
-        this->ioPullup = pullup;
-        if (this->ioInput) {
-            pinMode(this->hwPin, this->ioPullup ? INPUT_PULLUP : INPUT);
-        }
-        return true;
-    }
-
-
-    bool
-    RawPin::setType(PinType type) {
-        if (type == this->ioType) {
-            // nothing to do
-            return true;
-        }
-        if (DIGITAL == this->idType) {
-            if (DIGITAL == this->ioType) {
-                if (this->ioInput) {
-                    // di->ai -- ERROR digital pin can never analog input
-                    return false;
-                }
-                else {
-                    // do->ao -- check PWM
-                    if(digitalPinHasPWM(this->hwPin)) {
-                        // nothing special to initialized PWM
-                        return true;
-                    }
-                    else {
-                        // ERROR digital pin doesn't support analogWrite()
-                        return false;
-                    }
-                }
-            }
-            else {
-                // ai->di -- INTERNAL ERROR shouldn't ever get to analog-input state on a digital pin
-                // ao->do -- pinMode(this->hwPin, OUTPUT)
-                pinMode(this->hwPin, OUTPUT);
-                return true;
-            }
-        }
-        // ANALOG == this->idType
-        else {
-            if (DIGITAL == this->ioType) {
-                // di->ai -- ERROR can't undigital an analog pin
-                // do->ao -- ERROR can't undigital an analog pin
-                return false;
-            }
-            else {
-                this->ioType = type;
-                if (this->ioInput) {
-                    pinMode(this->hwPin, this->ioPullup ? INPUT_PULLUP : INPUT);
-                    return true;
-                }
-                else {
-                    pinMode(this->hwPin, OUTPUT);
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-
-    bool
-    RawPin::canRead() {
-        // TODO
-        return false;
-    }
-
-
-    bool
-    RawPin::canWrite() {
-        // TODO
-        return false;
-    }
-
 
     uint32_t
     RawPin::rawRead() {
-        // TODO
-        return 0;
+        if (DIGITAL == this->ioType) {
+            return digitalRead(this->hwPin);
+        }
+        else {
+            return analogRead(this->idNum);
+        }
     }
 
 
-    bool
+    void
     RawPin::rawWrite(uint32_t val) {
-        // TODO
-        return false;
+        if (DIGITAL == this->ioType) {
+            digitalWrite(this->hwPin, val);
+        }
+        else {
+            analogWrite(this->idNum, val);
+        }
     }
 
 
@@ -340,24 +233,24 @@ namespace TextDevices {
 
     bool
     API::claimPin(Command* command, RawPin* pin) {
-        if (pin->claimDevice == command->device) {
+        if (pin->claimant == command->device) {
             // nothing to do
             return true;
         }
-        if (pin->claimDevice != pin->pinDevice) {
+        if (pin->claimant != this->_d->pinsDevice) {
             char msg[128];
-            snprintf(msg, 128, "pin %s already claimed by %s", pin->id, pin->claimDevice->getDeviceName());
+            snprintf(msg, 128, "pin %s already claimed by %s", pin->id, pin->claimant->getDeviceName());
             this->error(command, msg);
             return false;
         }
-        pin->claimDevice = command->device;
+        pin->claimant = command->device;
         return true;
     }
 
 
     bool
     API::unclaimPin(Command* command, RawPin* pin) {
-        pin->claimDevice = pin->pinDevice;
+        pin->claimant = this->_d->pinsDevice;
         return false;
     }
 
@@ -403,12 +296,6 @@ namespace TextDevices {
         }
         this->_d->stream->println("");
         return true;
-    }
-
-
-    PinsDevice*
-    API::getPinsDevice(Command* command) {
-        return this->_d->pinsDevice;
     }
 
 
