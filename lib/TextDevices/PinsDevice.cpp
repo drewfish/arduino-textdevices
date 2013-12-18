@@ -26,12 +26,15 @@ namespace TextDevices {
 
     bool
     PinsDevice::dispatch(API* api, Command* command) {
-        char pinId[4];
+        char bufferA[16];   // a couple of generic buffers
+        char bufferB[8];    // (so we don't have to allocate so many)
         int offset = 0;
-        if (1 != sscanf(command->body, "pin %3s %n", pinId, &offset)) {
+        uint32_t value;
+
+        if (1 != sscanf(command->body, "pin %3s %n", bufferA, &offset)) {
             return false;
         }
-        RawPin *pin = api->getRawPin(command, pinId);
+        RawPin *pin = api->getRawPin(command, bufferA);
         if (!pin) {
             // api->getRawPin() will have reported an error already
             return true;
@@ -42,14 +45,11 @@ namespace TextDevices {
         if (sscanf(command->body, "config %n", &offset), offset) {
             command->body += offset;
             offset = 0;
-            char sType[8];
-            char sIo[8];
-            if (sscanf(command->body, "%8s %8s %n", sType, sIo, &offset), offset) {
+            if (sscanf(command->body, "%8s %8s %n", bufferA, bufferB, &offset), offset) {
                 command->body += offset;
-                offset = 0;
                 return this->configureRawPin(api, command, pin, 
-                        (sType[0] == 'd' ? DIGITAL : ANALOG),
-                        (sIo[0] == 'i'),
+                        (bufferA[0] == 'd' ? DIGITAL : ANALOG),
+                        (bufferB[0] == 'i'),
                         (*(command->body) == 'p')
                 );
             }
@@ -57,18 +57,34 @@ namespace TextDevices {
             return true;
         }
 
-        // TODO -- read
-        //      claim pin || return true
-        //      can read || error and return true
-        //      read
-        //      report
-        //      return true
-        // TODO -- write
-        //      claim pin || return true
-        //      can write || error and return true
-        //      write
-        //      return true
+        if (sscanf(command->body, "read %n", &offset), offset) {
+            if (! api->claimPin(command, pin)) {
+                // error already reported
+                return true;
+            }
+            if (! pin->ioInput) {
+                api->error(command, "pin not configured to read");
+                return true;
+            }
+            value = pin->rawRead();
+            snprintf(bufferA, 16, "PIN %3s %u", pin->id, value);
+            api->println(command, bufferA);
+            return true;
+        }
 
+        // FUTURE -- support low/off/high/on
+        if (1 == sscanf(command->body, "write %u", &value)) {
+            if (! api->claimPin(command, pin)) {
+                // error already reported
+                return true;
+            }
+            if (pin->ioInput) {
+                api->error(command, "pin not configured to write");
+                return true;
+            }
+            pin->rawWrite(value);
+            return true;
+        }
 
         //DEBUG cout << "---DEBUG--- fell off end --[" << command->body << "]--" << endl;
         return false;
