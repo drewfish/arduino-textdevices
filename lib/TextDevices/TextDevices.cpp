@@ -1,54 +1,6 @@
 #include "TextDevices.h"
 #include "PinsDevice.h"
-#include "ShortcutsDevice.h"
 namespace TextDevices {
-
-
-    //-----------------------------------------------------------------------
-    // DeviceList class
-    // (linked list)
-    //-----------------------------------------------------------------------
-
-    struct DeviceList {
-        DeviceList* next;
-        IDevice*    device;
-
-
-        DeviceList() : next(NULL), device(NULL) {}
-        DeviceList(IDevice* d) : next(NULL), device(d) {}
-
-
-        // adds device to end of list
-        static void
-        push(DeviceList** head, IDevice* device) {
-            DeviceList** empty = head;
-            while (*empty) {
-                empty = &((*empty)->next);
-            }
-            *empty = new DeviceList(device);
-        }
-
-
-        // removes device from list
-        // returns true if device was found and removed
-        static bool
-        remove(DeviceList** head, IDevice* device) {
-            // FUTURE
-            return false;
-        }
-
-
-        // we really only care about leaking this memory while testing
-        // (since on-device these objects lives until the device reboots)
-        ~DeviceList() {
-            if (this->next) {
-                delete this->next;
-                this->next = NULL;
-            }
-            delete this->device;
-        }
-
-    };
 
 
 
@@ -59,35 +11,21 @@ namespace TextDevices {
 
     struct _Devices {
         RawPin      pins[TEXTDEVICES_PINCOUNT];
-        DeviceList* registered;    // registered devices
-        PinsDevice* pinsDevice;
+        IDevice*    registered[TEXTDEVICES_DEVICECOUNT];    // registered devices
+        PinsDevice  pinsDevice;
         Stream*     stream;
         char        streamBuffer[128];
         size_t      streamBufferNext;
 
 
         _Devices() :
-            registered(NULL),
-            pinsDevice(NULL),
             stream(NULL)
         {
+            for (size_t d = 0; d < TEXTDEVICES_DEVICECOUNT; d++) {
+                this->registered[d] = NULL;
+            }
             this->streamBuffer[0] = 0;
             this->streamBufferNext = 0;
-            this->pinsDevice = new PinsDevice();
-        }
-
-
-        // we really only care about leaking this memory while testing
-        // (since on-device these objects lives until the device reboots)
-        ~_Devices() {
-            // owned by the registered device list
-            this->pinsDevice = NULL;
-
-            // clear device list
-            if (this->registered) {
-                delete this->registered;
-                this->registered = NULL;
-            }
         }
 
 
@@ -134,8 +72,7 @@ namespace TextDevices {
         setupDefaultDevices(API* api, Command* command) {
             // Devices are attempted in the order they are registered.
             // always attempt these first
-            this->registerDevice(api, command, this->pinsDevice);
-            this->registerDevice(api, command, new ShortcutsDevice());
+            this->registerDevice(api, command, &(this->pinsDevice));
         }
 
 
@@ -143,9 +80,15 @@ namespace TextDevices {
         registerDevice(API* api, Command* command, IDevice* device) {
             IDevice *oldDevice = command->device;
             command->device = device;
-            DeviceList::push(&(this->registered), device);
-            device->deviceRegistered(api, command);
-            command->device = oldDevice;
+            for (size_t d = 0; d < TEXTDEVICES_DEVICECOUNT; d++) {
+                if (! this->registered[d]) {
+                    this->registered[d] = device;
+                    device->deviceRegistered(api, command);
+                    command->device = oldDevice;
+                    return;
+                }
+            }
+            api->error(command, "no room to register device");
         }
 
 
@@ -237,10 +180,8 @@ namespace TextDevices {
             // nothing to do
             return true;
         }
-        if (pin->claimant != this->_d->pinsDevice) {
-            char msg[128];
-            snprintf(msg, 128, "pin %s already claimed by %s", pin->id, pin->claimant->getDeviceName());
-            this->error(command, msg);
+        if (pin->claimant != &(this->_d->pinsDevice)) {
+            this->error(command, "pin already claimed");
             return false;
         }
         pin->claimant = command->device;
@@ -250,20 +191,24 @@ namespace TextDevices {
 
     bool
     API::unclaimPin(Command* command, RawPin* pin) {
-        pin->claimant = this->_d->pinsDevice;
-        return false;
+        if (pin->claimant != command->device) {
+            this->error(command, "device tried to unclaim a pin that it didn't own");
+            return false;
+        }
+        pin->claimant = &(this->_d->pinsDevice);
+        return true;
     }
 
 
     bool
     API::dispatch(Command* command) {
-        DeviceList* d = this->_d->registered;
-        while (d) {
-            command->device = d->device;
-            if (d->device->dispatch(this, command)) {
-                return true;
+        for (size_t d = 0; d < TEXTDEVICES_DEVICECOUNT; d++) {
+            if (this->_d->registered[d]) {
+                command->device = this->_d->registered[d];
+                if (this->_d->registered[d]->dispatch(this, command)) {
+                    return true;
+                }
             }
-            d = d->next;
         }
         return false;
     }
@@ -355,11 +300,11 @@ namespace TextDevices {
         command.body = command.original;
         command.device = NULL;
         command.hasError = false;
-        DeviceList* d = this->_d->registered;
-        while (d) {
-            command.device = d->device;
-            d->device->poll(this->api, &command, now);
-            d = d->next;
+        for (size_t d = 0; d < TEXTDEVICES_DEVICECOUNT; d++) {
+            if (this->_d->registered[d]) {
+                command.device = this->_d->registered[d];
+                this->_d->registered[d]->poll(this->api, &command, now);
+            }
         }
 
         while (this->_d->stream->available() > 0) {
@@ -372,7 +317,9 @@ namespace TextDevices {
                 command.body = command.original;
                 command.device = NULL;
                 command.hasError = false;
-                this->api->dispatch(&command);
+                if (! this->api->dispatch(&command)) {
+                    this->api->error(&command, "unknown command");
+                }
 
                 // reset buffer
                 this->_d->streamBuffer[0] = 0;

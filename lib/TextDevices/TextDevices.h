@@ -6,6 +6,10 @@
 
 
 #define TEXTDEVICES_PINCOUNT NUM_DIGITAL_PINS
+#ifndef TEXTDEVICES_DEVICECOUNT
+    // maximum number of devices that can be registered
+    #define TEXTDEVICES_DEVICECOUNT 8
+#endif
 
 
 namespace TextDevices {
@@ -15,7 +19,6 @@ namespace TextDevices {
     class IDevice;
     class Devices;
     class _Devices; // internal implementation of Devices class
-    class PinsDevice;
 
     typedef enum { DIGITAL, ANALOG } PinType;
 

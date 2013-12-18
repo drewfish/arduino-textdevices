@@ -47,11 +47,12 @@ namespace TextDevices {
             offset = 0;
             if (sscanf(command->body, "%8s %8s %n", bufferA, bufferB, &offset), offset) {
                 command->body += offset;
-                return this->configureRawPin(api, command, pin, 
+                this->configureRawPin(api, command, pin, 
                         (bufferA[0] == 'd' ? DIGITAL : ANALOG),
                         (bufferB[0] == 'i'),
                         (*(command->body) == 'p')
                 );
+                return true;
             }
             // got "config" but it was empty
             return true;
