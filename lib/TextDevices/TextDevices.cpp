@@ -44,7 +44,6 @@ namespace TextDevices {
             size_t analogStart = NUM_DIGITAL_PINS - NUM_ANALOG_INPUTS;
             for (p = 0; p < TEXTDEVICES_PINCOUNT; p++) {
                 RawPin* pin = &(this->pins[p]);
-                pin->idx = p;
                 pin->hwPin = p;
                 //FUTURE pin->hwPort = digital_pin_to_port_PGM[pin->hwPin];
                 //FUTURE pin->hwMask = digital_pin_to_bit_mask_PGM[pin->hwPin];
@@ -133,16 +132,6 @@ namespace TextDevices {
 
     API::API(_Devices* d) {
         this->_d = d;
-    }
-
-
-    RawPin*
-    API::getRawPin(Command* command, size_t idx) {
-        if (idx >= TEXTDEVICES_PINCOUNT) {
-            this->error(command, "unknown pin");
-            return NULL;
-        }
-        return &(this->_d->pins[idx]);
     }
 
 

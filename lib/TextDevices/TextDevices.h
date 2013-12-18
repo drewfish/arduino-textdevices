@@ -25,7 +25,6 @@ namespace TextDevices {
 
     // management of the physical pin
     struct RawPin {
-        uint8_t     idx;        // index in arrays
         uint8_t     hwPin;      // digital pin number (which analog pins can be as well)
         char        id[4];      // textual identifier
         PinType     idType;     // base type of the pin
@@ -49,10 +48,6 @@ namespace TextDevices {
             _Devices*   _d;
             API(_Devices*);
         public:
-            // given the pin number, returns the raw pin object
-            // if invalid id, reports error and returns null
-            RawPin* getRawPin(Command*, size_t);
-
             // given a textual ID for a pin, returns the raw pin object
             // if invalid id, reports error and returns null
             RawPin* getRawPin(Command*, const char* id);
