@@ -38,7 +38,7 @@ namespace TextDevices {
         }
 
 
-        // TODO -- we really only care about leaking this memory while testing
+        // we really only care about leaking this memory while testing
         // (since on-device these objects lives until the device reboots)
         ~DeviceList() {
             if (this->next) {
@@ -77,7 +77,7 @@ namespace TextDevices {
         }
 
 
-        // TODO -- we really only care about leaking this memory while testing
+        // we really only care about leaking this memory while testing
         // (since on-device these objects lives until the device reboots)
         ~_Devices() {
             // owned by the registered device list
@@ -271,9 +271,6 @@ namespace TextDevices {
 
     void
     API::println(Command* command, const char* msg) {
-        // TODO -- decide if command automatically has device name prefixed
-        //this->_d->stream->print(command->device->getDeviceName());
-        //this->_d->stream->print(" ");
         // TODO -- uppercase msg
         this->_d->stream->println(msg);
     }
