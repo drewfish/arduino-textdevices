@@ -11,7 +11,7 @@ namespace TextDevices {
 
     struct _Devices {
         RawPin      pins[TEXTDEVICES_PINCOUNT];
-        IDevice*    registered[TEXTDEVICES_DEVICECOUNT];    // registered devices
+        IDevice*    registered[TEXTDEVICES_DEVICECOUNT];
         PinsDevice  pinsDevice;
         Stream*     stream;
         char        streamBuffer[128];
@@ -21,9 +21,7 @@ namespace TextDevices {
         _Devices() :
             stream(NULL)
         {
-            for (size_t d = 0; d < TEXTDEVICES_DEVICECOUNT; d++) {
-                this->registered[d] = NULL;
-            }
+            memset((void *)this->registered, 0, sizeof(IDevice*) * TEXTDEVICES_DEVICECOUNT);
             this->streamBuffer[0] = 0;
             this->streamBufferNext = 0;
         }
@@ -292,6 +290,7 @@ namespace TextDevices {
         for (size_t d = 0; d < TEXTDEVICES_DEVICECOUNT; d++) {
             if (this->_d->registered[d]) {
                 command.device = this->_d->registered[d];
+                command.hasError = false;
                 this->_d->registered[d]->poll(this->api, &command, now);
             }
         }
