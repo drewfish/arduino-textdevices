@@ -36,9 +36,9 @@ using namespace std;
 //-----------------------------------------------------------------------
 
 unsigned long           Arduino_millis;
-vector< deque<bool> >   Arduino_digitalRead(14);
-vector< deque<int> >    Arduino_analogRead(6);
-deque<int>              Arduino_Serial_input;
+//TODO vector< deque<bool> >   Arduino_digitalRead(14);
+//TODO vector< deque<int> >    Arduino_analogRead(6);
+vector<int>             Arduino_Serial_input;   // deque was leaking memory for me
 vector<string>          Arduino_changes;
 
 
@@ -95,9 +95,8 @@ digitalWrite(uint8_t pin, uint8_t value) {
 
 int
 digitalRead(uint8_t pin) {
-    bool val = Arduino_digitalRead[pin].front();
-    Arduino_digitalRead[pin].pop_front();
-    return val;
+    // TODO
+    return 0;
 }
 
 
@@ -215,18 +214,18 @@ struct Stream {
 
     int read() {
         int i = Arduino_Serial_input.front();
-        Arduino_Serial_input.pop_front();
+        Arduino_Serial_input.erase(Arduino_Serial_input.begin());
         return i;
     }
 
     size_t print(const char* msg) {
-        this->output.push_back(msg);
+        this->output.push_back(string(msg));
         return 0;
     }
 
 
     size_t println(const char* msg) {
-        this->output.push_back(msg);
+        this->output.push_back(string(msg));
         string s = "SERIAL-- ";
         for (size_t i = 0; i < this->output.size(); i++) {
             s += output[i];
@@ -249,14 +248,11 @@ Stream Serial;
 void
 Arduino_reset() {
     Arduino_millis = 4000;  // in practice the device takes some time to boot
-    for (size_t i = 0; i < 14; i++) {
-        Arduino_digitalRead[i].clear();
-    }
-    for (size_t i = 0; i < 6; i++) {
-        Arduino_analogRead[i].clear();
-    }
-    Arduino_changes.clear();
-    Serial.output.clear();
+    // TODO -- clear Arduino_digitalRead
+    // TODO -- clear Arduino_analogRead
+    vector<int>().swap(Arduino_Serial_input);
+    vector<string>().swap(Arduino_changes);
+    vector<string>().swap(Serial.output);
 }
 
 
