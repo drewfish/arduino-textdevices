@@ -44,9 +44,9 @@ vector<string>          Arduino_changes;
 
 void
 Arduino_set_input(const char* str) {
-    while (*str != 0) {
-        Arduino_Serial_input.push_back(*str);
-        ++str;
+    // add chars in reverse order so that we can just pop_back below
+    for (size_t i = strlen(str); i; i--) {
+        Arduino_Serial_input.push_back(str[i-1]);
     }
 }
 
@@ -213,8 +213,8 @@ struct Stream {
     }
 
     int read() {
-        int i = Arduino_Serial_input.front();
-        Arduino_Serial_input.erase(Arduino_Serial_input.begin());
+        int i = Arduino_Serial_input.back();
+        Arduino_Serial_input.pop_back();
         return i;
     }
 
