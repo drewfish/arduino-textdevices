@@ -36,8 +36,8 @@ using namespace std;
 //-----------------------------------------------------------------------
 
 unsigned long           Arduino_millis;
-//TODO vector< deque<bool> >   Arduino_digitalRead(14);
-//TODO vector< deque<int> >    Arduino_analogRead(6);
+vector<bool>            Arduino_digitalRead[14];
+vector<int>             Arduino_analogRead[6];
 vector<int>             Arduino_Serial_input;   // deque was leaking memory for me
 vector<string>          Arduino_changes;
 
@@ -85,18 +85,19 @@ pinMode(uint8_t pin, uint8_t mode) {
 }
 
 
+int
+digitalRead(uint8_t pin) {
+    bool reading = Arduino_digitalRead[pin].front();
+    Arduino_digitalRead[pin].erase(Arduino_digitalRead[pin].begin());
+    return reading;
+}
+
+
 void
 digitalWrite(uint8_t pin, uint8_t value) {
     char buffer[128];
     snprintf(buffer, 128, "ARDUINO-- digitalWrite(%d,%d)", pin, value);
     Arduino_changes.push_back(string(buffer));
-}
-
-
-int
-digitalRead(uint8_t pin) {
-    // TODO
-    return 0;
 }
 
 
@@ -109,14 +110,17 @@ digitalRead(uint8_t pin) {
 
 int
 analogRead(uint8_t pin) {
-    // TODO
-    return 0;
+    int reading = Arduino_analogRead[pin].front();
+    Arduino_analogRead[pin].erase(Arduino_analogRead[pin].begin());
+    return reading;
 }
 
 
 void
 analogWrite(uint8_t pin, int value) {
-    // TODO
+    char buffer[128];
+    snprintf(buffer, 128, "ARDUINO-- analogWrite(%d,%i)", pin, value);
+    Arduino_changes.push_back(string(buffer));
 }
 
 
@@ -161,7 +165,7 @@ delay(unsigned long ms) {
 #define max(a,b) ((a)>(b)?(a):(b))                                              
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt))) 
 
-// TODO
+// FUTURE
 //      long map(long, long, long, long, long)
 
 
@@ -248,8 +252,12 @@ Stream Serial;
 void
 Arduino_reset() {
     Arduino_millis = 4000;  // in practice the device takes some time to boot
-    // TODO -- clear Arduino_digitalRead
-    // TODO -- clear Arduino_analogRead
+    for (size_t pin = 0; pin < 14; pin++) {
+        vector<bool>().swap(Arduino_digitalRead[pin]);
+    }
+    for (size_t pin = 0; pin < 6; pin++) {
+        vector<int>().swap(Arduino_analogRead[pin]);
+    }
     vector<int>().swap(Arduino_Serial_input);
     vector<string>().swap(Arduino_changes);
     vector<string>().swap(Serial.output);
