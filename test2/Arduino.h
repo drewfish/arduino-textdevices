@@ -36,7 +36,7 @@ using namespace std;
 //-----------------------------------------------------------------------
 
 unsigned long           Arduino_millis;
-vector<bool>            Arduino_digitalRead[14];
+vector<bool>            Arduino_digitalRead[20];
 vector<int>             Arduino_analogRead[6];
 vector<int>             Arduino_Serial_input;   // deque was leaking memory for me
 vector<string>          Arduino_changes;

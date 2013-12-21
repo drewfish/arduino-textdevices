@@ -60,7 +60,7 @@ namespace TextDevices {
                     pin->ioType = ANALOG;
                     pin->ioInput = true;
                 }
-                pin->claimant = NULL;
+                pin->claimant = &(this->pinsDevice);
             }
         }
 
@@ -112,9 +112,10 @@ namespace TextDevices {
     void
     RawPin::rawWrite(uint32_t val) {
         if (DIGITAL == this->ioType) {
-            digitalWrite(this->hwPin, val);
+            digitalWrite(this->hwPin, val ? HIGH : LOW);
         }
         else {
+            val = constrain(val, 0, 255);
             analogWrite(this->idNum, val);
         }
     }
