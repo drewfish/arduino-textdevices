@@ -318,6 +318,7 @@ namespace TextDevices {
                 command.device = NULL;
                 command.hasError = false;
                 if (! this->api->dispatch(&command)) {
+                    command.device = NULL;
                     this->api->error(&command, "unknown command");
                 }
 

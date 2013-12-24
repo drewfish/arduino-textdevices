@@ -88,7 +88,6 @@ namespace TextDevices {
             return true;
         }
 
-        //DEBUG cout << "---DEBUG--- fell off end --[" << command->body << "]--" << endl;
         return false;
     }
 

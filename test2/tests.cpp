@@ -15,13 +15,53 @@ using namespace TextDevices;
 
 
 Devices* devices;
+IDevice* device;
 
 
 //-----------------------------------------------------------------------
 // ShortcutsDevice class
 //-----------------------------------------------------------------------
 
-// TODO
+TEST_GROUP(ShortcutsDevice) {
+    void setup() {
+        Arduino_reset();
+        devices = new Devices();
+        devices->setup(&Serial);
+        device = new ShortcutsDevice();
+        devices->registerDevice(device);
+    }
+    void teardown() {
+        Arduino_reset();
+        delete devices;
+        devices = NULL;
+        delete device;
+        device = NULL;
+    }
+};
+
+
+TEST(ShortcutsDevice, read) {
+    // setup
+    Arduino_set_input(
+            "pin d1 config digital output\n"
+    );
+    devices->loop();
+    Arduino_reset();
+
+    Arduino_set_input(
+            "read d0\n"
+            "write d1 1\n"
+            "pwm d0 100\n"
+            "pwm d3 100\n"
+    );
+    Arduino_digitalRead[0].push_back(true);
+    devices->loop();
+    CHECK_TEXT(4 == Arduino_changes.size(), "no changes change");
+    STRCMP_EQUAL("SERIAL-- PIN d00 1", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("ARDUINO-- digitalWrite(1,1)", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) FROM pins WHEN pwm d0 100", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("ARDUINO-- analogWrite(3,100)", Arduino_changes[3].c_str());
+}
 
 
 //-----------------------------------------------------------------------
@@ -128,6 +168,9 @@ TEST(PinsDevice, digitalpin_write) {
     STRCMP_EQUAL("ARDUINO-- analogWrite(3,0)", Arduino_changes[10].c_str());
     STRCMP_EQUAL("ARDUINO-- analogWrite(3,255)", Arduino_changes[11].c_str());
 }
+
+
+// TODO -- analog pins
 
 
 //-----------------------------------------------------------------------
