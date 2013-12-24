@@ -44,8 +44,8 @@ TEST_GROUP(PinsDevice) {
 
 TEST(PinsDevice, digitalpin_config) {
     Arduino_set_input(
-            "pin d0 config digital input\n"
-            "pin d0 config digital input pullup\n"
+            "pIn d0 config digital input\n"
+            "PIN d0 CONFIG digital input pullup\n"
             "pin d0 config digital input\n"
             "pin d0 config digital output\n"
             "pin d0 config digital input\n"

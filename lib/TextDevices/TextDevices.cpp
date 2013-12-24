@@ -89,6 +89,18 @@ namespace TextDevices {
         }
 
 
+        void
+        lowercaseBuffer() {
+            for (size_t i = 0; i < this->streamBufferNext; i++) {
+                char c = this->streamBuffer[i];
+                if (65 <= c && c <= 90) {
+                    c += 32;
+                    this->streamBuffer[i] = c;
+                }
+            }
+        }
+
+
     };
 
 
@@ -204,7 +216,6 @@ namespace TextDevices {
 
     void
     API::println(Command* command, const char* msg) {
-        // TODO -- uppercase msg
         this->_d->stream->println(msg);
     }
 
@@ -301,7 +312,7 @@ namespace TextDevices {
 
             if ('\n' == c) {
                 // dispatch the command
-                // TODO -- lowercase buffer
+                this->_d->lowercaseBuffer();
                 command.original = this->_d->streamBuffer;
                 command.body = command.original;
                 command.device = NULL;
