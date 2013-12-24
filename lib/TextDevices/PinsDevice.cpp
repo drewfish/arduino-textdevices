@@ -54,7 +54,8 @@ namespace TextDevices {
                 );
                 return true;
             }
-            // got "config" but it was empty
+            // got "config" but it was empty/malformed
+            api->error(command, "malformed command");
             return true;
         }
 
@@ -109,6 +110,10 @@ namespace TextDevices {
         //      ->ao --- check digitalPinHasPWM()
         //      ->ai --- INVALID (for different reasons)
 
+        if (! api->claimPin(command, pin)) {
+            // error already reported
+            return true;
+        }
         if (DIGITAL == type) {
             if (input) {
                 pinMode(pin->hwPin, pullup ? INPUT_PULLUP : INPUT);

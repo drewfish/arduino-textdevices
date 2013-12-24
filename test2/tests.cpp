@@ -52,9 +52,11 @@ TEST(PinsDevice, digitalpin_config) {
             "pin d3 config analog input\n"
             "pin d3 config analog output\n"
             "pin d3 config digital input\n"
+            "pin d3 config\n"
+            "pin d0 config analog output\n"
     );
     devices->loop();
-    CHECK_TEXT(7 == Arduino_changes.size(), "no changes change");
+    CHECK_TEXT(9 == Arduino_changes.size(), "no changes change");
     STRCMP_EQUAL("ARDUINO-- pinMode(0,0)", Arduino_changes[0].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(0,2)", Arduino_changes[1].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(0,0)", Arduino_changes[2].c_str());
@@ -62,6 +64,8 @@ TEST(PinsDevice, digitalpin_config) {
     STRCMP_EQUAL("ARDUINO-- pinMode(0,0)", Arduino_changes[4].c_str());
     STRCMP_EQUAL("SERIAL-- ERROR digital pin can't be configured for analog input FROM pins WHEN pin d3 config analog input", Arduino_changes[5].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(3,0)", Arduino_changes[6].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR malformed command FROM pins WHEN pin d3 config", Arduino_changes[7].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) FROM pins WHEN pin d0 config analog output", Arduino_changes[8].c_str());
 }
 
 
@@ -124,9 +128,6 @@ TEST(PinsDevice, digitalpin_write) {
     STRCMP_EQUAL("ARDUINO-- analogWrite(3,0)", Arduino_changes[10].c_str());
     STRCMP_EQUAL("ARDUINO-- analogWrite(3,255)", Arduino_changes[11].c_str());
 }
-
-
-// TODO -- more tests
 
 
 //-----------------------------------------------------------------------
