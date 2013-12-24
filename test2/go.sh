@@ -8,7 +8,6 @@ CPPFLAGS="-I${CPPTEST_HOME}/include -I. -I${SRCDIR}"
 LD_LIBRARIES="-L${CPPTEST_HOME}/lib -lCppUTest"
 
 rm -f tests 
-echo ${CC} ${CPPFLAGS} ${LD_LIBRARIES} tests.cpp -o tests
 ${CC} ${CPPFLAGS} ${LD_LIBRARIES} tests.cpp -o tests || exit $?
 ./tests -v
 
