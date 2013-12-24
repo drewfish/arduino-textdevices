@@ -40,7 +40,7 @@ TEST_GROUP(ShortcutsDevice) {
 };
 
 
-TEST(ShortcutsDevice, read) {
+TEST(ShortcutsDevice, all) {
     // setup
     Arduino_set_input(
             "pin d1 config digital output\n"
