@@ -170,7 +170,25 @@ TEST(PinsDevice, digitalpin_write) {
 }
 
 
-// TODO -- analog pins
+TEST(PinsDevice, analogpin_config) {
+    Arduino_set_input(
+            "pIn d0 config analog input\n"
+            "pIn a0 config analog input\n"
+            "pIn a0 config analog output\n"
+            "PIN a1 CONFIG digital input pullup\n"
+            "pin a1 config digital output\n"
+            "pin a1 config digital input\n"
+            "pin a1 config analog input\n"
+    );
+    devices->loop();
+    CHECK_TEXT(6 == Arduino_changes.size(), "no changes change");
+    STRCMP_EQUAL("SERIAL-- ERROR digital pin can't be configured for analog input FROM pins WHEN pin d0 config analog input", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) FROM pins WHEN pin a0 config analog output", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("ARDUINO-- pinMode(15,2)", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("ARDUINO-- pinMode(15,1)", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("ARDUINO-- pinMode(15,0)", Arduino_changes[4].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR analog pin configured to digital is stuck that way FROM pins WHEN pin a1 config analog input", Arduino_changes[5].c_str());
+}
 
 
 //-----------------------------------------------------------------------
