@@ -84,8 +84,8 @@ TEST_GROUP(PinsDevice) {
 
 TEST(PinsDevice, digitalpin_config) {
     Arduino_set_input(
-            "pIn d0 config digital input\n"
-            "PIN d0 CONFIG digital input pullup\n"
+            "pin d0 config digital input\n"
+            "pin d0 CONFIG digital input pullup\n"
             "pin d0 config digital input\n"
             "pin d0 config digital output\n"
             "pin d0 config digital input\n"
@@ -188,6 +188,42 @@ TEST(PinsDevice, analogpin_config) {
     STRCMP_EQUAL("ARDUINO-- pinMode(15,1)", Arduino_changes[3].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(15,0)", Arduino_changes[4].c_str());
     STRCMP_EQUAL("SERIAL-- ERROR analog pin configured to digital is stuck that way FROM pins WHEN pin a1 config analog input", Arduino_changes[5].c_str());
+}
+
+
+//-----------------------------------------------------------------------
+// TextDevices class
+//-----------------------------------------------------------------------
+
+TEST_GROUP(TextDevices) {
+    void setup() {
+        Arduino_reset();
+        devices = new Devices();
+        devices->setup(&Serial);
+    }
+    void teardown() {
+        Arduino_reset();
+        delete devices;
+        devices = NULL;
+    }
+};
+
+
+TEST(TextDevices, casemangling) {
+    Arduino_set_input(
+            "pin d0 config digital output\n"
+            "PIN d0 write 1\n"
+            "PIN D00 WRITE 1\n"
+            "AAAaaa\n"
+            "zzzZZZ\n"
+    );
+    devices->loop();
+    CHECK_TEXT(5 == Arduino_changes.size(), "no changes change");
+    STRCMP_EQUAL("ARDUINO-- pinMode(0,1)", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("ARDUINO-- digitalWrite(0,1)", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("ARDUINO-- digitalWrite(0,1)", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN aaaaaa", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN zzzzzz", Arduino_changes[4].c_str());
 }
 
 
