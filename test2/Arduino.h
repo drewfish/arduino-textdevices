@@ -38,6 +38,7 @@ using namespace std;
 unsigned long           Arduino_millis;
 vector<bool>            Arduino_digitalRead[20];
 vector<int>             Arduino_analogRead[6];
+vector<unsigned long>   Arduino_pulseIn[20];
 vector<int>             Arduino_Serial_input;   // deque was leaking memory for me
 vector<string>          Arduino_changes;
 
@@ -133,7 +134,18 @@ analogWrite(uint8_t pin, int value) {
 //      void noTone(uint8_t _pin)
 //      void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val)
 //      uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder)
-//      unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L)
+
+unsigned long
+pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L) {
+    unsigned long val = Arduino_pulseIn[pin].front();
+    Arduino_pulseIn[pin].erase(Arduino_pulseIn[pin].begin());
+    if (val >= timeout) {
+        Arduino_millis += timeout;
+        return 0;
+    }
+    Arduino_millis += val;
+    return val;
+}
 
 
 
@@ -161,9 +173,9 @@ delay(unsigned long ms) {
 //-----------------------------------------------------------------------
 // Math
 //-----------------------------------------------------------------------
-#define min(a,b) ((a)<(b)?(a):(b))                                              
-#define max(a,b) ((a)>(b)?(a):(b))                                              
-#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt))) 
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
+#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 // FUTURE
 //      long map(long, long, long, long, long)
@@ -252,8 +264,9 @@ Stream Serial;
 void
 Arduino_reset() {
     Arduino_millis = 4000;  // in practice the device takes some time to boot
-    for (size_t pin = 0; pin < 14; pin++) {
+    for (size_t pin = 0; pin < 20; pin++) {
         vector<bool>().swap(Arduino_digitalRead[pin]);
+        vector<unsigned long>().swap(Arduino_pulseIn[pin]);
     }
     for (size_t pin = 0; pin < 6; pin++) {
         vector<int>().swap(Arduino_analogRead[pin]);

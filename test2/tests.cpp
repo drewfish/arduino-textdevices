@@ -7,8 +7,9 @@
 #include "Arduino.h"
 #include "TextDevices.h"
 #include "TextDevices.cpp"
-#include "ShortcutsDevice.cpp"
 #include "PinsDevice.cpp"
+#include "ShortcutsDevice.cpp"
+#include "PulseinDevice.cpp"
 
 using namespace std;
 using namespace TextDevices;
@@ -16,6 +17,54 @@ using namespace TextDevices;
 
 Devices* devices;
 IDevice* device;
+
+
+//-----------------------------------------------------------------------
+// PulseinDevice class
+//-----------------------------------------------------------------------
+
+TEST_GROUP(PulseinDevice) {
+    void setup() {
+        Arduino_reset();
+        devices = new Devices();
+        devices->setup(&Serial);
+        device = new PulseinDevice();
+        devices->registerDevice(device);
+    }
+    void teardown() {
+        Arduino_reset();
+        delete devices;
+        devices = NULL;
+        delete device;
+        device = NULL;
+    }
+};
+
+
+TEST(PulseinDevice, all) {
+    // setup
+    Arduino_set_input(
+            "pin d1 config digital output\n"
+    );
+    devices->loop();
+    Arduino_reset();
+
+    Arduino_set_input(
+            "pulsein d0 1\n"
+            "pulsein d0 1 23\n"
+            "pulsein d33 1\n"
+            "pulsein d1 1\n"
+    );
+    Arduino_pulseIn[0].push_back(11);
+    Arduino_pulseIn[0].push_back(110);
+    devices->loop();
+    CHECK_TEXT(4 == Arduino_changes.size(), "no changes change");
+    STRCMP_EQUAL("SERIAL-- PULSEIN d00 11", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- PULSEIN d00 TIMEOUT", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM pulsein WHEN pulsein d33 1", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin should be configured for digital input FROM pulsein WHEN pulsein d1 1", Arduino_changes[3].c_str());
+}
+
 
 
 //-----------------------------------------------------------------------
@@ -62,6 +111,7 @@ TEST(ShortcutsDevice, all) {
     STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) FROM pins WHEN pwm d0 100", Arduino_changes[2].c_str());
     STRCMP_EQUAL("ARDUINO-- analogWrite(3,100)", Arduino_changes[3].c_str());
 }
+
 
 
 //-----------------------------------------------------------------------
@@ -191,6 +241,7 @@ TEST(PinsDevice, analogpin_config) {
 }
 
 
+
 //-----------------------------------------------------------------------
 // TextDevices class
 //-----------------------------------------------------------------------
@@ -225,6 +276,7 @@ TEST(TextDevices, casemangling) {
     STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN aaaaaa", Arduino_changes[3].c_str());
     STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN zzzzzz", Arduino_changes[4].c_str());
 }
+
 
 
 //-----------------------------------------------------------------------
