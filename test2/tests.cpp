@@ -8,8 +8,11 @@
 #include "TextDevices.h"
 #include "TextDevices.cpp"
 #include "PinsDevice.cpp"
-#include "ShortcutsDevice.cpp"
 #include "PulseinDevice.cpp"
+#include "ShiftersDevice.cpp"
+#include "ShortcutsDevice.cpp"
+#include "TimersDevice.cpp"
+#include "WatchersDevice.cpp"
 
 using namespace std;
 using namespace TextDevices;
@@ -17,6 +20,69 @@ using namespace TextDevices;
 
 Devices* devices;
 IDevice* device;
+
+
+//-----------------------------------------------------------------------
+// WatchersDevice class
+//-----------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------
+// TimersDevice class
+//-----------------------------------------------------------------------
+
+
+//-----------------------------------------------------------------------
+// ShiftersDevice class
+//-----------------------------------------------------------------------
+
+TEST_GROUP(ShiftersDevice) {
+    void setup() {
+        Arduino_reset();
+        devices = new Devices();
+        devices->setup(&Serial);
+        device = new ShiftersDevice();
+        devices->registerDevice(device);
+    }
+    void teardown() {
+        Arduino_reset();
+        delete devices;
+        devices = NULL;
+        delete device;
+        device = NULL;
+    }
+};
+
+
+TEST(ShiftersDevice, shiftin) {
+    Arduino_set_input(
+            "shift 0 config d0 d1 msb\n"
+            "shift 0 in 3\n"
+            "shift 0 out 4F,79,21 \n"
+            "shift 1 in 3\n"                    // not yet configured
+            "shift 55 config d0 d1 msb\n"       // invalid shifter id
+            "shift 0 unconfig\n"
+            "shift 0 in 3\n"                    // disabled shifter
+            "shift 0 config d55 a33 msb\n"      // invalid pins
+            "shift 0 config d2\n"               // invalid config
+    );
+    Arduino_shiftIn.push_back(3);
+    Arduino_shiftIn.push_back(13);
+    Arduino_shiftIn.push_back(23);
+    devices->loop();
+    CHECK_TEXT(11 == Arduino_changes.size(), "no changes change");
+    STRCMP_EQUAL("SERIAL-- SHIFT 0 IN 03,0D,17", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("ARDUINO-- shiftOut(0,1,1,79)", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("ARDUINO-- shiftOut(0,1,1,121)", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("ARDUINO-- shiftOut(0,1,1,33)", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR shifter not yet configured FROM shifters WHEN shift 1 in 3", Arduino_changes[4].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR invalid shifter id FROM shifters WHEN shift 55 config d0 d1 msb", Arduino_changes[5].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR shifter not yet configured FROM shifters WHEN shift 0 in 3", Arduino_changes[6].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM shifters WHEN shift 0 config d55 a33 msb", Arduino_changes[7].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM shifters WHEN shift 0 config d55 a33 msb", Arduino_changes[8].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown data pin FROM shifters WHEN shift 0 config d55 a33 msb", Arduino_changes[9].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR invalid config FROM shifters WHEN shift 0 config d2", Arduino_changes[10].c_str());
+}
 
 
 //-----------------------------------------------------------------------

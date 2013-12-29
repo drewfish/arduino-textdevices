@@ -215,6 +215,12 @@ namespace TextDevices {
 
 
     void
+    API::print(Command* command, const char* msg) {
+        this->_d->stream->print(msg);
+    }
+
+
+    void
     API::println(Command* command, const char* msg) {
         this->_d->stream->println(msg);
     }

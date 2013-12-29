@@ -39,6 +39,7 @@ unsigned long           Arduino_millis;
 vector<bool>            Arduino_digitalRead[20];
 vector<int>             Arduino_analogRead[6];
 vector<unsigned long>   Arduino_pulseIn[20];
+vector<uint8_t>         Arduino_shiftIn;
 vector<int>             Arduino_Serial_input;   // deque was leaking memory for me
 vector<string>          Arduino_changes;
 
@@ -71,6 +72,8 @@ Arduino_changes_dump() {
 #define INPUT           0x0
 #define OUTPUT          0x1
 #define INPUT_PULLUP    0x2
+#define LSBFIRST 0
+#define MSBFIRST 1
 
 
 
@@ -132,8 +135,6 @@ analogWrite(uint8_t pin, int value) {
 // FUTURE
 //      void tone(uint8_t _pin, unsigned int frequency, unsigned long duration = 0)
 //      void noTone(uint8_t _pin)
-//      void shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val)
-//      uint8_t shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder)
 
 unsigned long
 pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L) {
@@ -145,6 +146,22 @@ pulseIn(uint8_t pin, uint8_t state, unsigned long timeout = 1000000L) {
     }
     Arduino_millis += val;
     return val;
+}
+
+
+uint8_t
+shiftIn(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder) {
+    uint8_t val = Arduino_shiftIn.front();
+    Arduino_shiftIn.erase(Arduino_shiftIn.begin());
+    return val;
+}
+
+
+void
+shiftOut(uint8_t dataPin, uint8_t clockPin, uint8_t bitOrder, uint8_t val) {
+    char buffer[128];
+    snprintf(buffer, 128, "ARDUINO-- shiftOut(%d,%d,%d,%d)", dataPin, clockPin, bitOrder, val);
+    Arduino_changes.push_back(string(buffer));
 }
 
 
@@ -271,6 +288,7 @@ Arduino_reset() {
     for (size_t pin = 0; pin < 6; pin++) {
         vector<int>().swap(Arduino_analogRead[pin]);
     }
+    vector<uint8_t>().swap(Arduino_shiftIn);
     vector<int>().swap(Arduino_Serial_input);
     vector<string>().swap(Arduino_changes);
     vector<string>().swap(Serial.output);

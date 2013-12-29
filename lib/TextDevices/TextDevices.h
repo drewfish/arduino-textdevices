@@ -65,6 +65,9 @@ namespace TextDevices {
             bool dispatch(Command*);
 
             // sends output to the user
+            void print(Command*, const char*);
+
+            // sends output to the user
             void println(Command*, const char*);
 
             // reports an error to the user
