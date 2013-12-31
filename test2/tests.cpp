@@ -560,8 +560,39 @@ TEST(PinsDevice, analogpin_config) {
 }
 
 
-// TODO -- analogpin_read
-// TODO -- analogpin_write
+TEST(PinsDevice, analogpin_read) {
+    Arduino_set_input(
+            "pin a0 config digital input\n"
+            "pin a1 config analog input\n"
+            "pin a0 read\n"
+            "pin a1 read\n"
+    );
+    Arduino_digitalRead[14].push_back(true);
+    Arduino_analogRead[1].push_back(13);
+    devices->loop();
+    CHECK_TEXT(3 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("ARDUINO-- pinMode(14,0)", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- PIN a00 1", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- PIN a01 13", Arduino_changes[2].c_str());
+}
+
+
+TEST(PinsDevice, analogpin_write) {
+    Arduino_set_input(
+            "pin a0 config digital output\n"
+            "pin a0 write 1\n"
+            "pin a1 config analog output\n"
+            "pin a1 write 13\n"
+    );
+    Arduino_digitalRead[14].push_back(true);
+    Arduino_analogRead[1].push_back(13);
+    devices->loop();
+    CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("ARDUINO-- pinMode(14,1)", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("ARDUINO-- digitalWrite(14,1)", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) FROM pins WHEN pin a1 config analog output", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin a1 write 13", Arduino_changes[3].c_str());
+}
 
 
 
