@@ -33,8 +33,8 @@ namespace TextDevices {
         bool        ioInput;    // whether the pin is configured for input
         IDevice*    claimant;   // device which has a claim on the pin
         // be sure to check ioInput before using either of these
-        uint32_t    rawRead();
-        void        rawWrite(uint32_t);
+        uint16_t    rawRead();
+        void        rawWrite(uint16_t);
     };
 
 

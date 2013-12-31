@@ -29,7 +29,7 @@ namespace TextDevices {
         char bufferA[16];   // a couple of generic buffers
         char bufferB[8];    // (so we don't have to allocate so many)
         int offset = 0;
-        uint32_t value;
+        uint16_t value;
 
         if (1 != sscanf(command->body, "pin %3s %n", bufferA, &offset)) {
             return false;
@@ -69,13 +69,13 @@ namespace TextDevices {
                 return true;
             }
             value = pin->rawRead();
-            snprintf(bufferA, 16, "PIN %3s %u", pin->id, value);
+            snprintf(bufferA, 16, "PIN %3s %hu", pin->id, value);
             api->println(command, bufferA);
             return true;
         }
 
         // FUTURE -- support low/off/high/on
-        if (1 == sscanf(command->body, "write %u", &value)) {
+        if (1 == sscanf(command->body, "write %hu", &value)) {
             if (! api->claimPin(command, pin)) {
                 // error already reported
                 return true;

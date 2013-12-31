@@ -23,11 +23,11 @@ namespace TextDevices {
     bool
     PulseinDevice::dispatch(API* api, Command* command) {
         char pin[4];
-        uint32_t value;
+        uint16_t value;
         unsigned long timeout = 1000000L;
 
         // FUTURE -- support low/off/high/on
-        if (sscanf(command->original, "pulsein %4s %u %lu", pin, &value, &timeout) < 2) {
+        if (sscanf(command->original, "pulsein %4s %hu %lu", pin, &value, &timeout) < 2) {
             return false;
         }
 

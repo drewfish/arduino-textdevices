@@ -110,7 +110,7 @@ namespace TextDevices {
     //-----------------------------------------------------------------------
 
 
-    uint32_t
+    uint16_t
     RawPin::rawRead() {
         if (DIGITAL == this->ioType) {
             return digitalRead(this->hwPin);
@@ -122,7 +122,7 @@ namespace TextDevices {
 
 
     void
-    RawPin::rawWrite(uint32_t val) {
+    RawPin::rawWrite(uint16_t val) {
         if (DIGITAL == this->ioType) {
             digitalWrite(this->hwPin, val ? HIGH : LOW);
         }
