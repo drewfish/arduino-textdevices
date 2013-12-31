@@ -54,6 +54,12 @@ Arduino_set_input(const char* str) {
 
 
 void
+Arduino_changes_reset() {
+    vector<string>().swap(Arduino_changes);
+}
+
+
+void
 Arduino_changes_dump() {
     cout << "--------------------------------------------- CHANGES " << Arduino_changes.size() << endl;
     for (size_t i = 0; i < Arduino_changes.size(); i++) {
@@ -290,7 +296,7 @@ Arduino_reset() {
     }
     vector<uint8_t>().swap(Arduino_shiftIn);
     vector<int>().swap(Arduino_Serial_input);
-    vector<string>().swap(Arduino_changes);
+    Arduino_changes_reset();
     vector<string>().swap(Serial.output);
 }
 

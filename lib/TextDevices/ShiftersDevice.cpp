@@ -122,7 +122,7 @@ namespace TextDevices {
     ShiftersDevice::dispatch(API* api, Command* command) {
         uint8_t id = 0;
         int offset = 0;
-        Shifter *shifter = 0;
+        Shifter *shifter = NULL;
 
         if (1 != sscanf(command->body, "shift %hhu %n", &id, &offset)) {
             return false;
