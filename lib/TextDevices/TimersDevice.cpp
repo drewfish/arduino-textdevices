@@ -3,21 +3,13 @@ namespace TextDevices {
 
 
     void
-    TimersDevice::Timer::config(API* api, Command* command) {
-        int offset = 0;
-        this->interval = 0;
-        if (1 != sscanf(command->body, "%u %n", &(this->interval), &offset)) {
-            api->error(command, "invalid config");
-            return;
-        }
-        command->body += offset;
-
+    TimersDevice::Timer::config(API* api, Command* command, uint32_t interval, const char* cmd) {
+        this->interval = interval;
         // eat leading spaces
-        while (command->body[0] && isspace(command->body[0])) {
-            command->body++;
+        while (cmd[0] && isspace(cmd[0])) {
+            cmd++;
         }
-
-        if (! command->body[0]) {
+        if (! cmd[0]) {
             api->error(command, "invalid config");
             return;
         }
@@ -25,20 +17,16 @@ namespace TextDevices {
             free((void*) this->command);
             this->command = NULL;
         }
-        this->command = (char*) malloc(strlen(command->body) + 1);
-        strcpy(this->command, command->body);
+        this->command = (char*) malloc(strlen(cmd) + 1);
+        strcpy(this->command, cmd);
         this->times = 0;
         this->next = 0;
     }
 
 
     void
-    TimersDevice::Timer::run(API* api, Command* command) {
-        this->times = 0;
-        if (1 != sscanf(command->body, "%u", &(this->times))) {
-            api->error(command, "invalid command");
-            return;
-        }
+    TimersDevice::Timer::run(API* api, Command* command, uint32_t times) {
+        this->times = times;
         this->next = millis() + this->interval;
     }
 
@@ -96,6 +84,7 @@ namespace TextDevices {
         uint8_t id = 0;
         int offset = 0;
         Timer *timer = NULL;
+        uint32_t value = 0;
 
         if (1 != sscanf(command->body, "timer %hhu %n", &id, &offset)) {
             return false;
@@ -109,14 +98,12 @@ namespace TextDevices {
 
         command->body += offset;
         offset = 0;
-        if (sscanf(command->body, "config %n", &offset), offset) {
-            command->body += offset;
-            timer->config(api, command);
+        if (sscanf(command->body, "config %u %n", &value, &offset), offset) {
+            timer->config(api, command, value, command->body + offset);
             return true;
         }
-        if (sscanf(command->body, "run %n", &offset), offset) {
-            command->body += offset;
-            timer->run(api, command);
+        if (1 == sscanf(command->body, "run %u", &value)) {
+            timer->run(api, command, value);
             return true;
         }
         if (sscanf(command->body, "stop %n", &offset), offset) {

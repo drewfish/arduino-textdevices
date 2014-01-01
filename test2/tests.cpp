@@ -61,7 +61,7 @@ TEST(TimersDevice, config) {
     devices->loop();
     CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
     STRCMP_EQUAL("SERIAL-- ERROR unknown command FROM timers WHEN timer 0", Arduino_changes[0].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR invalid config FROM timers WHEN timer 0 config", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command FROM timers WHEN timer 0 config", Arduino_changes[1].c_str());
     STRCMP_EQUAL("SERIAL-- ERROR invalid config FROM timers WHEN timer 0 config 500", Arduino_changes[2].c_str());
     STRCMP_EQUAL("SERIAL-- ERROR invalid timer id FROM timers WHEN timer 5 config 500 pin 0 write 1", Arduino_changes[3].c_str());
 }
@@ -75,7 +75,7 @@ TEST(TimersDevice, run_once) {
     );
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR invalid command FROM timers WHEN timer 0 run", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command FROM timers WHEN timer 0 run", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 499;

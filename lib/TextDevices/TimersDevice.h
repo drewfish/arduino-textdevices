@@ -19,8 +19,8 @@ namespace TextDevices {
                 char*       command;
                 uint32_t    times;      // times left
                 uint32_t    next;       // when to run the command next
-                void config(API*, Command*);
-                void run(API*, Command*);
+                void config(API*, Command*, uint32_t, const char*);
+                void run(API*, Command*, uint32_t);
                 void stop(API*, Command*);
                 void poll(API*, uint32_t);
             };
