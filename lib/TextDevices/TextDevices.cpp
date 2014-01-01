@@ -106,6 +106,113 @@ namespace TextDevices {
 
 
     //-----------------------------------------------------------------------
+    // Devices class
+    //-----------------------------------------------------------------------
+
+    Devices::Devices() : _d(NULL), api(NULL) {
+        this->_d = new _Devices;
+        this->api = new API(this->_d);
+    }
+
+
+    Devices::~Devices() {
+        if (this->api) {
+            delete this->api;
+            this->api = NULL;
+        }
+        if (this->_d) {
+            delete this->_d;
+            this->_d = NULL;
+        }
+    }
+
+
+    void
+    Devices::setup(Stream* stream) {
+        Command command;
+        command.original = "setup";
+        command.body = command.original;
+        command.device = NULL;
+        this->_d->setup(this->api, &command, stream);
+    }
+
+
+    // These aren't registered during setup() but are available afterwards.
+    //devices->registerDevice(new WatchersDevice());
+    //devices->registerDevice(new TimersDevice(count));
+    //devices->registerDevice(new PWMDevice());
+    //devices->registerDevice(new PulseinDevice());
+    //devices->registerDevice(new ShiftersDevice(count));
+    void
+    Devices::registerDevice(IDevice* device) {
+        Command command;
+        command.original = "registerDevice";
+        command.body = command.original;
+        command.device = NULL;
+        this->_d->registerDevice(this->api, &command, device);
+    }
+
+    
+    void
+    Devices::loop() {
+        Command command;
+
+        // poll
+        uint32_t now = millis();
+        command.original = "poll";
+        command.body = command.original;
+        command.device = NULL;
+        command.hasError = false;
+        for (size_t d = 0; d < TEXTDEVICES_DEVICECOUNT; d++) {
+            if (this->_d->registered[d]) {
+                command.device = this->_d->registered[d];
+                command.hasError = false;
+                this->_d->registered[d]->poll(this->api, &command, now);
+            }
+        }
+
+        while (this->_d->stream->available() > 0) {
+            char c = char(this->_d->stream->read());
+            char *start;
+
+            if ('\n' == c) {
+                // dispatch the command
+                this->_d->lowercaseBuffer();
+                start = this->_d->streamBuffer;
+                while (*start && isspace(*start)) {
+                    start++;
+                }
+                if ('\0' != *start) {
+                    command.original = start;
+                    command.body = command.original;
+                    command.device = NULL;
+                    command.hasError = false;
+                    if (! this->api->dispatch(&command)) {
+                        command.device = NULL;
+                        this->api->error(&command, "unknown command");
+                    }
+                }
+
+                // reset buffer
+                this->_d->streamBuffer[0] = 0;
+                this->_d->streamBufferNext = 0;
+                continue;
+            }
+
+            // buffer the serial input
+            this->_d->streamBuffer[this->_d->streamBufferNext] = c;
+            this->_d->streamBufferNext++;
+            this->_d->streamBuffer[this->_d->streamBufferNext] = 0;
+            if (this->_d->streamBufferNext >= 128) {
+                // don't overflow buffer!!!
+                break;
+            }
+        }
+    }
+
+
+
+    //-----------------------------------------------------------------------
     // RawPin class
     //-----------------------------------------------------------------------
 
@@ -242,113 +349,6 @@ namespace TextDevices {
             this->_d->stream->print(command->original);
         }
         this->_d->stream->println("");
-    }
-
-
-
-    //-----------------------------------------------------------------------
-    // Devices class
-    //-----------------------------------------------------------------------
-
-    Devices::Devices() : _d(NULL), api(NULL) {
-        this->_d = new _Devices;
-        this->api = new API(this->_d);
-    }
-
-
-    Devices::~Devices() {
-        if (this->api) {
-            delete this->api;
-            this->api = NULL;
-        }
-        if (this->_d) {
-            delete this->_d;
-            this->_d = NULL;
-        }
-    }
-
-
-    void
-    Devices::setup(Stream* stream) {
-        Command command;
-        command.original = "setup";
-        command.body = command.original;
-        command.device = NULL;
-        this->_d->setup(this->api, &command, stream);
-    }
-
-
-    // These aren't registered during setup() but are available afterwards.
-    //devices->registerDevice(new WatchersDevice());
-    //devices->registerDevice(new TimersDevice(count));
-    //devices->registerDevice(new PWMDevice());
-    //devices->registerDevice(new PulseinDevice());
-    //devices->registerDevice(new ShiftersDevice(count));
-    void
-    Devices::registerDevice(IDevice* device) {
-        Command command;
-        command.original = "registerDevice";
-        command.body = command.original;
-        command.device = NULL;
-        this->_d->registerDevice(this->api, &command, device);
-    }
-
-    
-    void
-    Devices::loop() {
-        Command command;
-
-        // poll
-        uint32_t now = millis();
-        command.original = "poll";
-        command.body = command.original;
-        command.device = NULL;
-        command.hasError = false;
-        for (size_t d = 0; d < TEXTDEVICES_DEVICECOUNT; d++) {
-            if (this->_d->registered[d]) {
-                command.device = this->_d->registered[d];
-                command.hasError = false;
-                this->_d->registered[d]->poll(this->api, &command, now);
-            }
-        }
-
-        while (this->_d->stream->available() > 0) {
-            char c = char(this->_d->stream->read());
-            char *start;
-
-            if ('\n' == c) {
-                // dispatch the command
-                this->_d->lowercaseBuffer();
-                start = this->_d->streamBuffer;
-                while (*start && isspace(*start)) {
-                    start++;
-                }
-                if ('\0' != *start) {
-                    command.original = start;
-                    command.body = command.original;
-                    command.device = NULL;
-                    command.hasError = false;
-                    if (! this->api->dispatch(&command)) {
-                        command.device = NULL;
-                        this->api->error(&command, "unknown command");
-                    }
-                }
-
-                // reset buffer
-                this->_d->streamBuffer[0] = 0;
-                this->_d->streamBufferNext = 0;
-                continue;
-            }
-
-            // buffer the serial input
-            this->_d->streamBuffer[this->_d->streamBufferNext] = c;
-            this->_d->streamBufferNext++;
-            this->_d->streamBuffer[this->_d->streamBufferNext] = 0;
-            if (this->_d->streamBufferNext >= 128) {
-                // don't overflow buffer!!!
-                break;
-            }
-        }
     }
 
 

@@ -14,16 +14,66 @@
 
 namespace TextDevices {
 
-    class API;
-    struct Command;
     class IDevice;
-    class Devices;
+    class API;
     class _Devices; // internal implementation of Devices class
 
-    typedef enum { DIGITAL, ANALOG } PinType;
+
+    class Devices {
+        private:
+            _Devices*   _d;
+            API*        api;
+
+        public:
+            Devices();
+            ~Devices();
+
+            // intializes this class
+            // call during Arduino setup()
+            void setup(Stream*);
+
+            // add a new device for handling text commands
+            // call during Arduino setup()
+            void registerDevice(IDevice*);
+
+            // handle commands as they come in
+            // also for some devices which are time-sensitive
+            // call during Arduino loop()
+            void loop();
+    };
+
+
+    // represents the user command being dispatched
+    struct Command {
+        const char* original;   // the original command as given by the user
+        const char* body;       // the command as relative to the device
+        IDevice*    device;     // the device handling this command
+        bool        hasError;   // whether an error was reported while dispatching this command
+    };
+
+
+    // interface which each device should implement
+    class IDevice {
+        public:
+            virtual ~IDevice() {};
+
+            // return a textual identification of the device
+            virtual const char* getDeviceName() = 0;
+
+            // called when the device is registered
+            virtual void deviceRegistered(API*, Command*) = 0;
+
+            // called each time through loop()
+            virtual void poll(API*, Command*, uint32_t) = 0;
+
+            // ask the device to attempt to dispatch the command
+            // if the device dispatches the command it should return true
+            virtual bool dispatch(API*, Command*) = 0;
+    };
 
 
     // management of the physical pin
+    typedef enum { DIGITAL, ANALOG } PinType;
     struct RawPin {
         uint8_t     hwPin;      // digital pin number (which analog pins can be as well)
         char        id[4];      // textual identifier
@@ -73,55 +123,6 @@ namespace TextDevices {
             // reports an error to the user
             // automatically includes original command
             void error(Command*, const char*);
-    };
-
-
-    struct Command {
-        const char* original;   // the original command as given by the user
-        const char* body;       // the command as relative to the device
-        IDevice*    device;     // the device handling this command
-        bool        hasError;   // whether an error was reported for this command
-    };
-
-
-    // interface which each device should implement
-    class IDevice {
-        public:
-            virtual ~IDevice() {};
-
-            // return a textual identification of the device
-            virtual const char* getDeviceName() = 0;
-
-            // called when the device is registered
-            virtual void deviceRegistered(API*, Command*) = 0;
-
-            // called each time through loop()
-            virtual void poll(API*, Command*, uint32_t) = 0;
-
-            // ask the device to attempt to dispatch the command
-            // if the device dispatches the command it should return true
-            virtual bool dispatch(API*, Command*) = 0;
-    };
-
-
-    class Devices {
-        private:
-            _Devices*   _d;
-            API*        api;
-
-        public:
-            Devices();
-            ~Devices();
-
-            void setup(Stream*);
-
-            void registerDevice(IDevice*);
-
-            void loop();
-
-        private:
-            void setupPins();
-            void setupDefaultDevices();
     };
 
 
