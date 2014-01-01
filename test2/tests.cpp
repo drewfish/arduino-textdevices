@@ -632,6 +632,21 @@ TEST(TextDevices, casemangling) {
 }
 
 
+TEST(TextDevices, wierdinput) {
+    Arduino_set_input(
+            "\n"
+            " \n"
+            "  \n"
+            " pin d0 write 1\n"
+            "  pin d0 write 1\n"
+    );
+    devices->loop();
+    CHECK_TEXT(2 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[1].c_str());
+}
+
+
 
 //-----------------------------------------------------------------------
 // execution start

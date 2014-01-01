@@ -314,17 +314,24 @@ namespace TextDevices {
 
         while (this->_d->stream->available() > 0) {
             char c = char(this->_d->stream->read());
+            char *start;
 
             if ('\n' == c) {
                 // dispatch the command
                 this->_d->lowercaseBuffer();
-                command.original = this->_d->streamBuffer;
-                command.body = command.original;
-                command.device = NULL;
-                command.hasError = false;
-                if (! this->api->dispatch(&command)) {
+                start = this->_d->streamBuffer;
+                while (*start && isspace(*start)) {
+                    start++;
+                }
+                if ('\0' != *start) {
+                    command.original = start;
+                    command.body = command.original;
                     command.device = NULL;
-                    this->api->error(&command, "unknown command");
+                    command.hasError = false;
+                    if (! this->api->dispatch(&command)) {
+                        command.device = NULL;
+                        this->api->error(&command, "unknown command");
+                    }
                 }
 
                 // reset buffer
