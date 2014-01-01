@@ -226,7 +226,7 @@ namespace TextDevices {
     }
 
 
-    bool
+    void
     API::error(Command* command, const char* msg) {
         this->_d->stream->print("ERROR ");
         if (msg) {
@@ -242,7 +242,6 @@ namespace TextDevices {
             this->_d->stream->print(command->original);
         }
         this->_d->stream->println("");
-        return true;
     }
 
 

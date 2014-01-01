@@ -72,8 +72,7 @@ namespace TextDevices {
 
             // reports an error to the user
             // automatically includes original command
-            // always returns true
-            bool error(Command*, const char*);
+            void error(Command*, const char*);
     };
 
 
