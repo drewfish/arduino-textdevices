@@ -18,12 +18,12 @@ namespace TextDevices {
                 RawPin  *pinData;
                 RawPin  *pinClock;
                 uint8_t bitOrder;
+                void config(API*, Command*);
+                void unconfig(API*, Command*);
+                void in(API*, Command*);
+                void out(API*, Command*);
             };
             Shifter shifters[TEXTDEVICES_SHIFTERCOUNT];
-            void config(API*, Command*, Shifter*);
-            void unconfig(API*, Command*, Shifter*);
-            void in(API*, Command*, Shifter*);
-            void out(API*, Command*, Shifter*);
         public:
             const char* getDeviceName();
             void deviceRegistered(API*, Command*);

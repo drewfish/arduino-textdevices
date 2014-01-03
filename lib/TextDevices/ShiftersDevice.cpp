@@ -3,7 +3,7 @@ namespace TextDevices {
 
 
     void
-    ShiftersDevice::config(API* api, Command* command, Shifter* shifter) {
+    ShiftersDevice::Shifter::config(API* api, Command* command) {
         char bufferA[4];
         char bufferB[4];
         char bufferC[4];
@@ -11,33 +11,33 @@ namespace TextDevices {
             api->error(command, "invalid config");
             return;
         }
-        if (shifter->pinData && !api->unclaimPin(command, shifter->pinData)) {
+        if (this->pinData && !api->unclaimPin(command, this->pinData)) {
             // error already reported
             return;
         }
-        if (shifter->pinClock && !api->unclaimPin(command, shifter->pinClock)) {
+        if (this->pinClock && !api->unclaimPin(command, this->pinClock)) {
             // error already reported
             return;
         }
 
-        shifter->pinData = api->getRawPin(command, bufferA);
-        shifter->pinClock = api->getRawPin(command, bufferB);
-        shifter->bitOrder = (0==strncmp(bufferC, "msb", 3)) ? MSBFIRST : LSBFIRST;
-        if (! shifter->pinData) {
+        this->pinData = api->getRawPin(command, bufferA);
+        this->pinClock = api->getRawPin(command, bufferB);
+        this->bitOrder = (0==strncmp(bufferC, "msb", 3)) ? MSBFIRST : LSBFIRST;
+        if (! this->pinData) {
             api->error(command, "unknown data pin");
-            shifter->pinClock = NULL;
+            this->pinClock = NULL;
             return;
         }
-        if (! shifter->pinClock) {
+        if (! this->pinClock) {
             api->error(command, "unknown clock pin");
-            shifter->pinData = NULL;
+            this->pinData = NULL;
             return;
         }
-        if (! api->claimPin(command, shifter->pinData)) {
+        if (! api->claimPin(command, this->pinData)) {
             // error already reported
             return;
         }
-        if (! api->claimPin(command, shifter->pinClock)) {
+        if (! api->claimPin(command, this->pinClock)) {
             // error already reported
             return;
         }
@@ -45,22 +45,22 @@ namespace TextDevices {
 
 
     void
-    ShiftersDevice::unconfig(API* api, Command* command, Shifter* shifter) {
-        if (shifter->pinData && !api->unclaimPin(command, shifter->pinData)) {
+    ShiftersDevice::Shifter::unconfig(API* api, Command* command) {
+        if (this->pinData && !api->unclaimPin(command, this->pinData)) {
             // error already reported
             return;
         }
-        shifter->pinData = NULL;
-        if (shifter->pinClock && !api->unclaimPin(command, shifter->pinClock)) {
+        this->pinData = NULL;
+        if (this->pinClock && !api->unclaimPin(command, this->pinClock)) {
             // error already reported
             return;
         }
-        shifter->pinClock = NULL;
+        this->pinClock = NULL;
     }
 
 
     void
-    ShiftersDevice::in(API* api, Command* command, Shifter* shifter) {
+    ShiftersDevice::Shifter::in(API* api, Command* command) {
         size_t count = 0;
         uint8_t val;
         char buffer[16];
@@ -70,14 +70,14 @@ namespace TextDevices {
         if (! count) {
             return;
         }
-        if (!shifter->pinData || !shifter->pinClock) {
+        if (!this->pinData || !this->pinClock) {
             api->error(command, "shifter not yet configured");
             return;
         }
-        snprintf(buffer, 16, "SHIFT %u IN ", shifter->id);
+        snprintf(buffer, 16, "SHIFT %u IN ", this->id);
         api->print(command, buffer);
         for (; count >= 1; count--) {
-            val = shiftIn(shifter->pinData->hwPin, shifter->pinClock->hwPin, shifter->bitOrder);
+            val = shiftIn(this->pinData->hwPin, this->pinClock->hwPin, this->bitOrder);
             snprintf(buffer, 16, (count==1 ? "%02X" : "%02X,"), val);
             api->print(command, buffer);
         }
@@ -86,7 +86,7 @@ namespace TextDevices {
 
 
     void
-    ShiftersDevice::out(API* api, Command* command, Shifter* shifter) {
+    ShiftersDevice::Shifter::out(API* api, Command* command) {
         int val;
         int offset = 0;
         while (sscanf(command->body, "%02x%n", &val, &offset), offset) {
@@ -95,7 +95,7 @@ namespace TextDevices {
             if (',' == command->body[offset]) {
                 command->body += 1;
             }
-            shiftOut(shifter->pinData->hwPin, shifter->pinClock->hwPin, shifter->bitOrder, val);
+            shiftOut(this->pinData->hwPin, this->pinClock->hwPin, this->bitOrder, val);
         }
     }
 
@@ -139,21 +139,21 @@ namespace TextDevices {
 
         if (sscanf(command->body, "config %n", &offset), offset) {
             command->body += offset;
-            this->config(api, command, shifter);
+            shifter->config(api, command);
             return true;
         }
         if (sscanf(command->body, "unconfig %n", &offset), offset) {
-            this->unconfig(api, command, shifter);
+            shifter->unconfig(api, command);
             return true;
         }
         if (sscanf(command->body, "in %n", &offset), offset) {
             command->body += offset;
-            this->in(api, command, shifter);
+            shifter->in(api, command);
             return true;
         }
         if (sscanf(command->body, "out %n", &offset), offset) {
             command->body += offset;
-            this->out(api, command, shifter);
+            shifter->out(api, command);
             return true;
         }
 
