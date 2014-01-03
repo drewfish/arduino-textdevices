@@ -7,7 +7,9 @@ CC=g++
 CPPFLAGS="-I${CPPTEST_HOME}/include -I. -I${SRCDIR}"
 LD_LIBRARIES="-L${CPPTEST_HOME}/lib -lCppUTest"
 
-rm -f tests 
+echo compiling tests...
 ${CC} ${CPPFLAGS} ${LD_LIBRARIES} tests.cpp -o tests || exit $?
+
+echo running tests...
 ./tests -v
 

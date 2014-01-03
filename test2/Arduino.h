@@ -37,6 +37,7 @@ using namespace std;
 
 unsigned long           Arduino_millis;
 vector<bool>            Arduino_digitalRead[20];
+bool                    Arduino_digitalRead_default = false;
 vector<int>             Arduino_analogRead[6];
 vector<unsigned long>   Arduino_pulseIn[20];
 vector<uint8_t>         Arduino_shiftIn;
@@ -97,6 +98,9 @@ pinMode(uint8_t pin, uint8_t mode) {
 
 int
 digitalRead(uint8_t pin) {
+    if (! Arduino_digitalRead[pin].size()) {
+        return Arduino_digitalRead_default;
+    }
     bool reading = Arduino_digitalRead[pin].front();
     Arduino_digitalRead[pin].erase(Arduino_digitalRead[pin].begin());
     return reading;
@@ -120,6 +124,9 @@ digitalWrite(uint8_t pin, uint8_t value) {
 
 int
 analogRead(uint8_t pin) {
+    if (! Arduino_analogRead[pin].size()) {
+        return 0;
+    }
     int reading = Arduino_analogRead[pin].front();
     Arduino_analogRead[pin].erase(Arduino_analogRead[pin].begin());
     return reading;
@@ -227,14 +234,15 @@ delay(unsigned long ms) {
 //-----------------------------------------------------------------------
 // Bits and Bytes
 //-----------------------------------------------------------------------
+#define bit(b) (1UL << (b))
+#define bitClear(value, bit) ((value) &= ~(1UL << (bit)))
+#define bitRead(value, bit) (((value) >> (bit)) & 0x01)
+#define bitSet(value, bit) ((value) |= (1UL << (bit)))
+#define bitWrite(value, bit, bitvalue) (bitvalue ? bitSet(value, bit) : bitClear(value, bit))
+
 // FUTURE
 //      lowByte()
 //      highByte()
-//      bitRead()
-//      bitWrite()
-//      bitSet()
-//      bitClear()
-//      bit()
 
 
 

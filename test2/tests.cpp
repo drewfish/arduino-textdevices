@@ -26,6 +26,272 @@ IDevice* device;
 // WatchersDevice class
 //-----------------------------------------------------------------------
 
+TEST_GROUP(WatchersDevice) {
+    void setup() {
+        Arduino_reset();
+        devices = new Devices();
+        devices->setup(&Serial);
+        device = new WatchersDevice();
+        devices->registerDevice(device);
+    }
+    void teardown() {
+        Arduino_reset();
+        delete devices;
+        devices = NULL;
+        delete device;
+        device = NULL;
+    }
+};
+
+
+TEST(WatchersDevice, config) {
+    Arduino_set_input(
+            "watch d0\n"
+            "watch d0 config\n"
+            "watch d0 config change\n"
+            "watch d0 config change 20\n"
+            "pin d1 config digital output\n"
+            "watch d1 config change 20\n"
+    );
+    devices->loop();
+    CHECK_TEXT(5 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command FROM watchers WHEN watch d0", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command FROM watchers WHEN watch d0 config", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command FROM watchers WHEN watch d0 config change", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("ARDUINO-- pinMode(1,1)", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured for read FROM watchers WHEN watch d1 config change 20", Arduino_changes[4].c_str());
+}
+
+
+TEST(WatchersDevice, run_no_changes) {
+    Arduino_set_input(
+            "watch d0 config change 20\n"
+    );
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    for (size_t i = 0; i < 20; i++) {
+        Arduino_millis += 4;
+        devices->loop();
+        CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    }
+}
+
+
+TEST(WatchersDevice, run_change_within_timeout) {
+    Arduino_set_input(
+            "watch d0 config change 13\n"
+    );
+    Arduino_digitalRead_default = false;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+
+    Arduino_millis += 4;
+    Arduino_digitalRead_default = true;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+
+    Arduino_millis += 4;
+    Arduino_digitalRead_default = false;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+
+    Arduino_millis += 4;
+    Arduino_digitalRead_default = true;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+
+    Arduino_millis += 4;
+    Arduino_digitalRead_default = false;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+
+    Arduino_digitalRead_default = true;
+    Arduino_millis += 4;
+    devices->loop();
+    CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("SERIAL-- WATCH d00 1 4020", Arduino_changes[0].c_str());
+
+    Arduino_changes_reset();
+    Arduino_millis += 4;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+
+}
+
+
+// changes happened, but return to oldValue by time changeTimeout triggers
+TEST(WatchersDevice, run_resettle_within_timeout) {
+    Arduino_set_input(
+            "watch d0 config change 12\n"
+    );
+    Arduino_digitalRead_default = false;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+
+    Arduino_millis += 4;
+    Arduino_digitalRead_default = true;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+
+    Arduino_millis += 4;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+
+    Arduino_millis += 4;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+
+    Arduino_millis += 4;
+    Arduino_digitalRead_default = false;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+
+    Arduino_changes_reset();
+    Arduino_millis += 4;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+}
+
+
+TEST(WatchersDevice, stop_start) {
+    // failure modes
+    Arduino_set_input(
+            "watch d0 start\n"
+            "watch d0 stop\n"
+            "pin d1 config digital output\nwatch d1 config change 20\n"
+            "watch d0 config change 20\nwatch d0 stop\nwatch d0 stop\n"
+    );
+    devices->loop();
+    CHECK_TEXT(5 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("SERIAL-- ERROR watcher hasn't been configured FROM watchers WHEN watch d0 start", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR watcher hasn't been configured FROM watchers WHEN watch d0 stop", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("ARDUINO-- pinMode(1,1)", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured for read FROM watchers WHEN watch d1 config change 20", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR watcher not started FROM watchers WHEN watch d0 stop", Arduino_changes[4].c_str());
+    Arduino_changes_reset();
+
+    // start, make changes, confirm reports of changes
+    Arduino_set_input(
+            "watch d0 config change 6\n"
+            "watch d0 start\n"
+    );
+    Arduino_digitalRead_default = false;
+    devices->loop();
+    Arduino_millis += 4;    // 4004
+    Arduino_digitalRead_default = true;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4008
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4012
+    devices->loop();
+    CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("SERIAL-- WATCH d00 1 4012", Arduino_changes[0].c_str());
+    Arduino_changes_reset();
+
+    // stop, make changes, confirm no reports made
+    Arduino_digitalRead_default = false;
+    Arduino_set_input(
+            "watch d0 stop\n"
+    );
+    devices->loop();
+    Arduino_millis += 4;    // 4016
+    devices->loop();
+    Arduino_millis += 4;    // 4020
+    devices->loop();
+    Arduino_millis += 4;    // 4024
+    devices->loop();
+    Arduino_millis += 4;    // 4028
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+
+    // start, make changes, confirm reports of changes
+    Arduino_set_input(
+            "watch d0 start\n"
+    );
+    Arduino_digitalRead_default = false;
+    devices->loop();
+    Arduino_millis += 4;    // 4032
+    Arduino_digitalRead_default = true;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4036
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4040
+    devices->loop();
+    CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("SERIAL-- WATCH d00 1 4040", Arduino_changes[0].c_str());
+    Arduino_changes_reset();
+
+    // configure (different config), make changes, confirm reports of changes
+    Arduino_set_input(
+            "watch d0 config falling 9\n"
+    );
+    Arduino_digitalRead_default = true;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4044
+    Arduino_digitalRead_default = false;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4048
+    Arduino_digitalRead_default = false;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4052
+    Arduino_digitalRead_default = false;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4056
+    Arduino_digitalRead_default = false;
+    devices->loop();
+    CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("SERIAL-- WATCH d00 0 4056", Arduino_changes[0].c_str());
+    Arduino_changes_reset();
+
+    // start, make more changes, confirm reports of changes
+    Arduino_set_input(
+            "watch d0 start\n"
+    );
+    devices->loop();
+
+    Arduino_millis += 4;    // 4060
+    Arduino_digitalRead_default = true;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4064
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4068
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4072
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4076
+    Arduino_digitalRead_default = false;
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4080
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4084
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+    Arduino_millis += 4;    // 4088
+    devices->loop();
+    CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("SERIAL-- WATCH d00 0 4088", Arduino_changes[0].c_str());
+    Arduino_changes_reset();
+
+    // timeout doesn't "refire" if looping on same millisecond
+    devices->loop();
+    CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
+}
+
+
 
 //-----------------------------------------------------------------------
 // TimersDevice class
@@ -422,10 +688,9 @@ TEST(ShortcutsDevice, all) {
             "pwm d0 100\n"
             "pwm d3 100\n"
     );
-    Arduino_digitalRead[0].push_back(true);
     devices->loop();
     CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- PIN d00 1", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- PIN d00 0", Arduino_changes[0].c_str());
     STRCMP_EQUAL("ARDUINO-- digitalWrite(1,1)", Arduino_changes[1].c_str());
     STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) FROM pins WHEN pwm d0 100", Arduino_changes[2].c_str());
     STRCMP_EQUAL("ARDUINO-- analogWrite(3,100)", Arduino_changes[3].c_str());
@@ -519,9 +784,6 @@ TEST(PinsDevice, digitalpin_write) {
             "pin d3 write 0\n"
             "pin d3 write -10\n"
     );
-    Arduino_digitalRead[0].push_back(true);
-    Arduino_digitalRead[0].push_back(false);
-    Arduino_digitalRead[13].push_back(true);
     devices->loop();
     CHECK_TEXT(12 == Arduino_changes.size(), "wrong number of changes");
     STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[0].c_str());
@@ -584,8 +846,6 @@ TEST(PinsDevice, analogpin_write) {
             "pin a1 config analog output\n"
             "pin a1 write 13\n"
     );
-    Arduino_digitalRead[14].push_back(true);
-    Arduino_analogRead[1].push_back(13);
     devices->loop();
     CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
     STRCMP_EQUAL("ARDUINO-- pinMode(14,1)", Arduino_changes[0].c_str());
