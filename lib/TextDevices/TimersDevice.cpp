@@ -62,12 +62,6 @@ namespace TextDevices {
 
 
     void
-    TimersDevice::deviceRegistered(API*, Command*) {
-        // nothing to do
-    }
-
-
-    void
     TimersDevice::poll(API* api, Command* command, uint32_t now) {
         Timer *timer = NULL;
         for (size_t t = 0; t < TEXTDEVICES_TIMERCOUNT; t++) {

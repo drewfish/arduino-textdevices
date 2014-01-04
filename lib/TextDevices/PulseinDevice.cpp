@@ -9,12 +9,6 @@ namespace TextDevices {
 
 
     void
-    PulseinDevice::deviceRegistered(API*, Command*) {
-        // nothing to do
-    }
-
-
-    void
     PulseinDevice::poll(API*, Command*, uint32_t) {
         // nothing to do
     }

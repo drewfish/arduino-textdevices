@@ -100,15 +100,14 @@ namespace TextDevices {
     }
 
 
-    const char*
-    ShiftersDevice::getDeviceName() {
-        return "shifters";
+    ShiftersDevice::ShiftersDevice() {
+        memset((void *)this->shifters, 0, sizeof(Shifter) * TEXTDEVICES_SHIFTERCOUNT);
     }
 
 
-    void
-    ShiftersDevice::deviceRegistered(API*, Command*) {
-        memset((void *)this->shifters, 0, sizeof(Shifter) * TEXTDEVICES_SHIFTERCOUNT);
+    const char*
+    ShiftersDevice::getDeviceName() {
+        return "shifters";
     }
 
 

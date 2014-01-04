@@ -9,12 +9,6 @@ namespace TextDevices {
 
 
     void
-    ShortcutsDevice::deviceRegistered(API*, Command*) {
-        // nothing to do
-    }
-
-
-    void
     ShortcutsDevice::poll(API*, Command*, uint32_t) {
         // nothing to do
     }

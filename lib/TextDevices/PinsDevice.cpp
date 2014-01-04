@@ -13,12 +13,6 @@ namespace TextDevices {
 
 
     void
-    PinsDevice::deviceRegistered(API* api, Command* command) {
-        // nothing to do
-    }
-
-
-    void
     PinsDevice::poll(API*, Command*, uint32_t) {
         // nothing to do
     }

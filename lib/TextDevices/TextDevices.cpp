@@ -80,7 +80,6 @@ namespace TextDevices {
             for (size_t d = 0; d < TEXTDEVICES_DEVICECOUNT; d++) {
                 if (! this->registered[d]) {
                     this->registered[d] = device;
-                    device->deviceRegistered(api, command);
                     command->device = oldDevice;
                     return;
                 }

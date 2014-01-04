@@ -911,7 +911,6 @@ TEST(TextDevices, pin_ids) {
     class A : public IDevice {
         public:
             const char* getDeviceName() { return "A"; }
-            void deviceRegistered(API*, Command*) {}
             bool dispatch(API*, Command*) { return false; }
             void poll(API* api, Command* command, uint32_t) {
                 RawPin* pin;
@@ -1149,7 +1148,6 @@ TEST(TextDevices, pin_ownership) {
                     return this->id;
                 return "A";
             }
-            void deviceRegistered(API*, Command*) {}
             bool dispatch(API*, Command*) { return false; }
             void poll(API* api, Command* command, uint32_t) {
                 this->api = api;

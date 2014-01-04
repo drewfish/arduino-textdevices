@@ -60,9 +60,6 @@ namespace TextDevices {
             // return a textual identification of the device
             virtual const char* getDeviceName() = 0;
 
-            // called when the device is registered
-            virtual void deviceRegistered(API*, Command*) = 0;
-
             // called each time through loop()
             virtual void poll(API*, Command*, uint32_t) = 0;
 

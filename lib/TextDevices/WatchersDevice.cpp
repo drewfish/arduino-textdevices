@@ -98,12 +98,6 @@ namespace TextDevices {
 
 
     void
-    WatchersDevice::deviceRegistered(API*, Command*) {
-        // nothing to do
-    }
-
-
-    void
     WatchersDevice::poll(API* api, Command* command, uint32_t now) {
         for (uint8_t p = 0; p < TEXTDEVICES_PINCOUNT; p++) {
             if (bitRead(this->watchers[p].flags, STARTED)) {
