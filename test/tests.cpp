@@ -892,7 +892,7 @@ TEST(TextDevices, casemangling) {
 }
 
 
-TEST(TextDevices, wierdinput) {
+TEST(TextDevices, weirdinput) {
     Arduino_set_input(
             "\n"
             " \n"
@@ -904,6 +904,287 @@ TEST(TextDevices, wierdinput) {
     CHECK_TEXT(2 == Arduino_changes.size(), "wrong number of changes");
     STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[0].c_str());
     STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[1].c_str());
+}
+
+
+TEST(TextDevices, pin_ids) {
+    class A : public IDevice {
+        public:
+            const char* getDeviceName() { return "A"; }
+            void deviceRegistered(API*, Command*) {}
+            bool dispatch(API*, Command*) { return false; }
+            void poll(API* api, Command* command, uint32_t) {
+                RawPin* pin;
+                pin = api->getRawPin(command, "");
+                CHECK_EQUAL(NULL, pin);
+                CHECK_EQUAL(1, Arduino_changes.size());
+                STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM A WHEN poll", Arduino_changes[0].c_str());
+                Arduino_changes_reset();
+            
+                pin = api->getRawPin(command, "foo");
+                CHECK_EQUAL(NULL, pin);
+                CHECK_EQUAL(1, Arduino_changes.size());
+                STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM A WHEN poll", Arduino_changes[0].c_str());
+                Arduino_changes_reset();
+
+                pin = api->getRawPin(command, "d-1");
+                CHECK_EQUAL(NULL, pin);
+                CHECK_EQUAL(1, Arduino_changes.size());
+                STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM A WHEN poll", Arduino_changes[0].c_str());
+                Arduino_changes_reset();
+
+                pin = api->getRawPin(command, "-1");
+                CHECK_EQUAL(NULL, pin);
+                CHECK_EQUAL(1, Arduino_changes.size());
+                STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM A WHEN poll", Arduino_changes[0].c_str());
+                Arduino_changes_reset();
+
+                pin = api->getRawPin(command, "d0");
+                CHECK(pin != NULL);
+                pin = api->getRawPin(command, "d00");
+                CHECK(pin != NULL);
+                pin = api->getRawPin(command, "a0");
+                CHECK(pin != NULL);
+                pin = api->getRawPin(command, "a00");
+                CHECK(pin != NULL);
+
+                pin = api->getRawPin(command, "0");
+                CHECK(NULL != pin);
+                CHECK(0 == pin->hwPin);
+                STRCMP_EQUAL("d00", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(0 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "1");
+                CHECK(NULL != pin);
+                CHECK(1 == pin->hwPin);
+                STRCMP_EQUAL("d01", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(1 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "2");
+                CHECK(NULL != pin);
+                CHECK(2 == pin->hwPin);
+                STRCMP_EQUAL("d02", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(2 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "3");
+                CHECK(NULL != pin);
+                CHECK(3 == pin->hwPin);
+                STRCMP_EQUAL("d03", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(3 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "4");
+                CHECK(NULL != pin);
+                CHECK(4 == pin->hwPin);
+                STRCMP_EQUAL("d04", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(4 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "5");
+                CHECK(NULL != pin);
+                CHECK(5 == pin->hwPin);
+                STRCMP_EQUAL("d05", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(5 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "6");
+                CHECK(NULL != pin);
+                CHECK(6 == pin->hwPin);
+                STRCMP_EQUAL("d06", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(6 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "7");
+                CHECK(NULL != pin);
+                CHECK(7 == pin->hwPin);
+                STRCMP_EQUAL("d07", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(7 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "8");
+                CHECK(NULL != pin);
+                CHECK(8 == pin->hwPin);
+                STRCMP_EQUAL("d08", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(8 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "9");
+                CHECK(NULL != pin);
+                CHECK(9 == pin->hwPin);
+                STRCMP_EQUAL("d09", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(9 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "10");
+                CHECK(NULL != pin);
+                CHECK(10 == pin->hwPin);
+                STRCMP_EQUAL("d10", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(10 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "11");
+                CHECK(NULL != pin);
+                CHECK(11 == pin->hwPin);
+                STRCMP_EQUAL("d11", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(11 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "12");
+                CHECK(NULL != pin);
+                CHECK(12 == pin->hwPin);
+                STRCMP_EQUAL("d12", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(12 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "13");
+                CHECK(NULL != pin);
+                CHECK(13 == pin->hwPin);
+                STRCMP_EQUAL("d13", pin->id);
+                CHECK(DIGITAL == pin->idType);
+                CHECK(13 == pin->idNum);
+                CHECK(DIGITAL == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "a0");
+                CHECK(NULL != pin);
+                CHECK(14 == pin->hwPin);
+                STRCMP_EQUAL("a00", pin->id);
+                CHECK(ANALOG == pin->idType);
+                CHECK(0 == pin->idNum);
+                CHECK(ANALOG == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "a1");
+                CHECK(NULL != pin);
+                CHECK(15 == pin->hwPin);
+                STRCMP_EQUAL("a01", pin->id);
+                CHECK(ANALOG == pin->idType);
+                CHECK(1 == pin->idNum);
+                CHECK(ANALOG == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "a2");
+                CHECK(NULL != pin);
+                CHECK(16 == pin->hwPin);
+                STRCMP_EQUAL("a02", pin->id);
+                CHECK(ANALOG == pin->idType);
+                CHECK(2 == pin->idNum);
+                CHECK(ANALOG == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "a3");
+                CHECK(NULL != pin);
+                CHECK(17 == pin->hwPin);
+                STRCMP_EQUAL("a03", pin->id);
+                CHECK(ANALOG == pin->idType);
+                CHECK(3 == pin->idNum);
+                CHECK(ANALOG == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "a4");
+                CHECK(NULL != pin);
+                CHECK(18 == pin->hwPin);
+                STRCMP_EQUAL("a04", pin->id);
+                CHECK(ANALOG == pin->idType);
+                CHECK(4 == pin->idNum);
+                CHECK(ANALOG == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                pin = api->getRawPin(command, "a5");
+                CHECK(NULL != pin);
+                CHECK(19 == pin->hwPin);
+                STRCMP_EQUAL("a05", pin->id);
+                CHECK(ANALOG == pin->idType);
+                CHECK(5 == pin->idNum);
+                CHECK(ANALOG == pin->ioType);
+                CHECK(true == pin->ioInput);
+
+                CHECK_EQUAL(0, Arduino_changes.size());
+            }
+    };
+    A a;
+    devices->registerDevice(&a);
+    devices->loop();
+}
+
+
+TEST(TextDevices, pin_ownership) {
+    class A : public IDevice {
+        private:
+            const char* id;
+            API*        api;
+        public:
+            A(const char* i) : id(i) {}
+            const char* getDeviceName() {
+                if (this->id)
+                    return this->id;
+                return "A";
+            }
+            void deviceRegistered(API*, Command*) {}
+            bool dispatch(API*, Command*) { return false; }
+            void poll(API* api, Command* command, uint32_t) {
+                this->api = api;
+            }
+            void claim() {
+                Command command;
+                command.original = "claim";
+                command.body = command.original;
+                command.device = this;
+                this->api->claimPin(&command, this->api->getRawPin(&command, "d0"));
+            }
+            void unclaim() {
+                Command command;
+                command.original = "unclaim";
+                command.body = command.original;
+                command.device = this;
+                this->api->unclaimPin(&command, this->api->getRawPin(&command, "d0"));
+            }
+    };
+    A a("a");
+    A b("b");
+    devices->registerDevice(&a);
+    devices->registerDevice(&b);
+    devices->loop();
+    a.unclaim();
+    a.claim();
+    b.claim();
+    a.unclaim();
+    b.claim();
+    a.claim();
+    b.unclaim();
+    CHECK_EQUAL(3, Arduino_changes.size());
+    STRCMP_EQUAL("SERIAL-- ERROR device tried to unclaim a pin that it didn't own FROM a WHEN unclaim", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin already claimed FROM b WHEN claim", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin already claimed FROM a WHEN claim", Arduino_changes[2].c_str());
 }
 
 
