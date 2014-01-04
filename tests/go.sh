@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-SRCDIR="../lib/TextDevices"
+SRCDIR=".."
 CPPTEST_HOME="/usr/local/Cellar/cpputest/3.5"   # brew install ccputest
 
 CC=g++

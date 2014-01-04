@@ -1,0 +1,1 @@
+../../../ShortcutsDevice.cpp
