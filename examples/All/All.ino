@@ -22,12 +22,27 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <TextDevices.h>
+#include <PulseinDevice.h>
+#include <ShiftersDevice.h>
+#include <ShortcutsDevice.h>
+#include <TimersDevice.h>
+#include <WatchersDevice.h>
 
-TextDevices::Devices devices;
+TextDevices::Devices            devices;
+TextDevices::PulseinDevice      pulseinDevice;
+TextDevices::ShiftersDevice     shiftersDevice;
+TextDevices::ShortcutsDevice    shortcutsDevice;
+TextDevices::TimersDevice       timersDevice;
+TextDevices::WatchersDevice     watchersDevice;
 
 void setup() {
     Serial.begin(9600);
     devices.setup(&Serial);
+    devices.registerDevice(&pulseinDevice);
+    devices.registerDevice(&shiftersDevice);
+    devices.registerDevice(&shortcutsDevice);
+    devices.registerDevice(&timersDevice);
+    devices.registerDevice(&watchersDevice);
 }
 
 void loop() {
