@@ -20,11 +20,6 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-#include <CppUTest/TestHarness.h>
-#include <CppUTest/SimpleString.h>
-#include <CppUTest/PlatformSpecificFunctions.h>
-#include <CppUTest/CommandLineTestRunner.h>
-// http://cpputest.github.io/manual.html#assertions
 
 #include "Arduino.h"
 #include "TextDevices.h"
@@ -35,6 +30,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "ShortcutsDevice.cpp"
 #include "TimersDevice.cpp"
 #include "WatchersDevice.cpp"
+
+#include <CppUTest/TestHarness.h>
+#include <CppUTest/SimpleString.h>
+#include <CppUTest/PlatformSpecificFunctions.h>
+#include <CppUTest/CommandLineTestRunner.h>
+// http://cpputest.github.io/manual.html#assertions
 
 using namespace std;
 using namespace TextDevices;
