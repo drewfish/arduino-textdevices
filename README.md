@@ -7,7 +7,7 @@ This is a library to use in your own sketches.
 It's possible to use just this library -- any of the [example sketches](https://github.com/drewfish/arduino-textdevices/tree/master/examples/) can be compiled without change and uploaded to an arduino to get the functionality of this library.
 
 This library comes in components (called "devices") which can be used to load only the funtionality you need.
-The [examples/All](https://github.com/drewfish/arduino-textdevices/tree/master/examples/All/) shows how to use all the devices in this library.
+The [examples/All](https://github.com/drewfish/arduino-textdevices/tree/master/examples/All/All.ino) shows how to use all the devices in this library.
 Other examples show how to use only certain devices.
 
 
