@@ -19,7 +19,6 @@ You can download this library from [https://github.com/drewfish/arduino-textdevi
 To add this library to a sketch choose the `Sketch` menu, then `Import Library...`, then `TextDevices`. That will add the following to your sketch:
 
 ```cpp
-#include <PinsDevice.h>
 #include <PulseinDevice.h>
 #include <ShiftersDevice.h>
 #include <ShortcutsDevice.h>
@@ -34,7 +33,7 @@ See the various [examples](https://github.com/drewfish/arduino-textdevices/tree/
 
 ### Usage
 To use this library you'll need to `#include <TextDevices.h>` in your sketch.
-This gives you the basic `PinsDevice` interface.
+This gives you the basic interface.
 
 ```cpp
 #include <TextDevices.h>

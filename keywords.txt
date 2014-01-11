@@ -1,4 +1,3 @@
-PinsDevice      KEYWORD1
 PulseinDevice   KEYWORD1
 ShiftersDevice  KEYWORD1
 ShortcutsDevice KEYWORD1
