@@ -34,6 +34,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #endif
 
 
+extern int __heap_start, *__brkval;
 namespace TextDevices {
 
     class IDevice;
@@ -142,6 +143,17 @@ namespace TextDevices {
             // reports an error to the user
             // automatically includes original command
             void error(Command*, const char*);
+
+            // reports an error to the user
+            // automatically includes original command
+            void error(Command*, const __FlashStringHelper*);
+
+            // returns the number of unused bytes in SRAM
+            // http://learn.adafruit.com/memories-of-an-arduino/measuring-free-memory#sram
+            int freeRam() {
+                int v;
+                return (size_t) &v - (__brkval == 0 ? (size_t) &__heap_start : (size_t) __brkval);
+            }
     };
 
 

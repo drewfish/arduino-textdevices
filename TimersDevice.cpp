@@ -32,7 +32,7 @@ namespace TextDevices {
             cmd++;
         }
         if (! cmd[0]) {
-            api->error(command, "invalid config");
+            api->error(command, F("invalid config"));
             return;
         }
         if (this->command) {
@@ -102,11 +102,11 @@ namespace TextDevices {
         Timer *timer = NULL;
         uint32_t value = 0;
 
-        if (1 != sscanf(command->body, "timer %hhu %n", &id, &offset)) {
+        if (1 != sscanf_P(command->body, PSTR("timer %hhu %n"), &id, &offset)) {
             return false;
         }
         if (id >= TEXTDEVICES_TIMERCOUNT) {
-            api->error(command, "invalid timer id");
+            api->error(command, F("invalid timer id"));
             return true;
         }
         timer = &(this->timers[id]);
@@ -114,21 +114,21 @@ namespace TextDevices {
 
         command->body += offset;
         offset = 0;
-        if (sscanf(command->body, "config %u %n", &value, &offset), offset) {
+        if (sscanf_P(command->body, PSTR("config %u %n"), &value, &offset), offset) {
             timer->config(api, command, value, command->body + offset);
             return true;
         }
-        if (1 == sscanf(command->body, "run %u", &value)) {
+        if (1 == sscanf_P(command->body, PSTR("run %u"), &value)) {
             timer->run(api, command, value);
             return true;
         }
-        if (sscanf(command->body, "stop %n", &offset), offset) {
+        if (sscanf_P(command->body, PSTR("stop %n"), &offset), offset) {
             command->body += offset;
             timer->stop(api, command);
             return true;
         }
 
-        api->error(command, "unknown command");
+        api->error(command, F("unknown command"));
         return true;
     }
 

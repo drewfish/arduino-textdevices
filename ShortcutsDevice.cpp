@@ -42,27 +42,27 @@ namespace TextDevices {
         char newCommand[32];
         uint16_t value;
 
-        if (1 == sscanf(command->original, "read %4s", pin)) {
-            snprintf(newCommand, 32, "pin %s read", pin);
+        if (1 == sscanf_P(command->original, PSTR("read %4s"), pin)) {
+            snprintf_P(newCommand, 32, PSTR("pin %s read"), pin);
             command->body = newCommand;
             return api->dispatch(command);
         }
 
-        if (2 == sscanf(command->original, "write %4s %hu", pin, &value)) {
-            snprintf(newCommand, 32, "pin %s write %hu", pin, value);
+        if (2 == sscanf_P(command->original, PSTR("write %4s %hu"), pin, &value)) {
+            snprintf_P(newCommand, 32, PSTR("pin %s write %hu"), pin, value);
             command->body = newCommand;
             return api->dispatch(command);
         }
 
-        if (2 == sscanf(command->original, "pwm %4s %hu", pin, &value)) {
-            snprintf(newCommand, 32, "pin %s config analog output", pin);
+        if (2 == sscanf_P(command->original, PSTR("pwm %4s %hu"), pin, &value)) {
+            snprintf_P(newCommand, 32, PSTR("pin %s config analog output"), pin);
             command->body = newCommand;
             api->dispatch(command);
             if (command->hasError) {
                 // error already reported
                 return true;
             }
-            snprintf(newCommand, 32, "pin %s write %hu", pin, value);
+            snprintf_P(newCommand, 32, PSTR("pin %s write %hu"), pin, value);
             command->body = newCommand;
             return api->dispatch(command);
         }

@@ -29,8 +29,8 @@ namespace TextDevices {
         char bufferA[4];
         char bufferB[4];
         char bufferC[4];
-        if (3 != sscanf(command->body, "%4s %4s %4s", bufferA, bufferB, bufferC)) {
-            api->error(command, "invalid config");
+        if (3 != sscanf_P(command->body, PSTR("%4s %4s %4s"), bufferA, bufferB, bufferC)) {
+            api->error(command, F("invalid config"));
             return;
         }
         if (this->pinData && !api->unclaimPin(command, this->pinData)) {
@@ -44,14 +44,14 @@ namespace TextDevices {
 
         this->pinData = api->getRawPin(command, bufferA);
         this->pinClock = api->getRawPin(command, bufferB);
-        this->bitOrder = (0==strncmp(bufferC, "msb", 3)) ? MSBFIRST : LSBFIRST;
+        this->bitOrder = (0==strncmp_P(bufferC, PSTR("msb"), 3)) ? MSBFIRST : LSBFIRST;
         if (! this->pinData) {
-            api->error(command, "unknown data pin");
+            api->error(command, F("unknown data pin"));
             this->pinClock = NULL;
             return;
         }
         if (! this->pinClock) {
-            api->error(command, "unknown clock pin");
+            api->error(command, F("unknown clock pin"));
             this->pinData = NULL;
             return;
         }
@@ -86,24 +86,25 @@ namespace TextDevices {
         size_t count = 0;
         uint8_t val;
         char buffer[16];
-        if (1 != sscanf(command->body, "%lu", &count)) {
+        if (1 != sscanf_P(command->body, PSTR("%lu"), &count)) {
             return;
         }
         if (! count) {
             return;
         }
         if (!this->pinData || !this->pinClock) {
-            api->error(command, "shifter not yet configured");
+            api->error(command, F("shifter not yet configured"));
             return;
         }
-        snprintf(buffer, 16, "SHIFT %u IN ", this->id);
+        snprintf_P(buffer, 16, PSTR("SHIFT %u IN "), this->id);
         api->print(command, buffer);
         for (; count >= 1; count--) {
             val = shiftIn(this->pinData->hwPin, this->pinClock->hwPin, this->bitOrder);
-            snprintf(buffer, 16, (count==1 ? "%02X" : "%02X,"), val);
+            snprintf_P(buffer, 16, (count==1 ? PSTR("%02X") : PSTR("%02X,")), val);
             api->print(command, buffer);
         }
-        api->println(command, "");
+        buffer[0] = 0;
+        api->println(command, buffer);
     }
 
 
@@ -111,7 +112,7 @@ namespace TextDevices {
     ShiftersDevice::Shifter::out(API* api, Command* command) {
         int val;
         int offset = 0;
-        while (sscanf(command->body, "%02x%n", &val, &offset), offset) {
+        while (sscanf_P(command->body, PSTR("%02x%n"), &val, &offset), offset) {
             command->body += offset;
             offset = 0;
             if (',' == command->body[offset]) {
@@ -145,11 +146,11 @@ namespace TextDevices {
         int offset = 0;
         Shifter *shifter = NULL;
 
-        if (1 != sscanf(command->body, "shift %hhu %n", &id, &offset)) {
+        if (1 != sscanf_P(command->body, PSTR("shift %hhu %n"), &id, &offset)) {
             return false;
         }
         if (id >= TEXTDEVICES_SHIFTERCOUNT) {
-            api->error(command, "invalid shifter id");
+            api->error(command, F("invalid shifter id"));
             return true;
         }
         shifter = &(this->shifters[id]);
@@ -158,27 +159,27 @@ namespace TextDevices {
         command->body += offset;
         offset = 0;
 
-        if (sscanf(command->body, "config %n", &offset), offset) {
+        if (sscanf_P(command->body, PSTR("config %n"), &offset), offset) {
             command->body += offset;
             shifter->config(api, command);
             return true;
         }
-        if (sscanf(command->body, "unconfig %n", &offset), offset) {
+        if (sscanf_P(command->body, PSTR("unconfig %n"), &offset), offset) {
             shifter->unconfig(api, command);
             return true;
         }
-        if (sscanf(command->body, "in %n", &offset), offset) {
+        if (sscanf_P(command->body, PSTR("in %n"), &offset), offset) {
             command->body += offset;
             shifter->in(api, command);
             return true;
         }
-        if (sscanf(command->body, "out %n", &offset), offset) {
+        if (sscanf_P(command->body, PSTR("out %n"), &offset), offset) {
             command->body += offset;
             shifter->out(api, command);
             return true;
         }
 
-        api->error(command, "unknown command");
+        api->error(command, F("unknown command"));
         return true;
     }
 

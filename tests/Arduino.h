@@ -35,9 +35,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <vector>
 #include <deque>
 #include <string>
-
+#include "avr/pgmspace.h"
 
 using namespace std;
+
+
+
+//-----------------------------------------------------------------------
+// memory debugging
+//-----------------------------------------------------------------------
+
+extern int *__brkval;
+extern int __heap_start;
+int __brkval_val = 0;
+int *__brkval = &__brkval_val;
+int __heap_start = 0x80000000;
 
 
 
@@ -89,6 +101,7 @@ Arduino_changes_dump() {
     }
     cout << "---------------------------------------------" << endl;
 }
+
 
 
 //-----------------------------------------------------------------------
@@ -292,6 +305,11 @@ struct Stream {
     }
 
 
+    size_t print(const __FlashStringHelper* msg) {
+        return this->print((const char*) msg);
+    }
+
+
     size_t println(const char* msg) {
         this->output.push_back(string(msg));
         string s = "SERIAL-- ";
@@ -302,6 +320,12 @@ struct Stream {
         Arduino_changes.push_back(s);
         return 0;
     }
+
+
+    size_t println(const __FlashStringHelper* msg) {
+        return this->println((const char*) msg);
+    }
+
 
 };
 Stream Serial;

@@ -27,7 +27,7 @@ namespace TextDevices {
     void
     WatchersDevice::Watcher::config(API* api, Command* command, const char* change, uint32_t settleTimeout) {
         if (! this->pin->ioInput) {
-            api->error(command, "pin not configured for read");
+            api->error(command, F("pin not configured for read"));
             return;
         }
         this->flags = 0;
@@ -47,11 +47,11 @@ namespace TextDevices {
     void
     WatchersDevice::Watcher::start(API* api, Command* command) {
         if (! this->pin) {
-            api->error(command, "watcher hasn't been configured");
+            api->error(command, F("watcher hasn't been configured"));
             return;
         }
         if (! this->pin->ioInput) {
-            api->error(command, "pin not configured for read");
+            api->error(command, F("pin not configured for read"));
             return;
         }
         if (! api->claimPin(command, this->pin)) {
@@ -66,11 +66,11 @@ namespace TextDevices {
     void
     WatchersDevice::Watcher::stop(API* api, Command* command) {
         if (! this->pin) {
-            api->error(command, "watcher hasn't been configured");
+            api->error(command, F("watcher hasn't been configured"));
             return;
         }
         if (! bitRead(this->flags, STARTED)) {
-            api->error(command, "watcher not started");
+            api->error(command, F("watcher not started"));
             return;
         }
         if (! api->unclaimPin(command, this->pin)) {
@@ -97,7 +97,7 @@ namespace TextDevices {
                      (bitRead(this->flags, FALL) && (newValue < oldValue)) )
                 {
                     // "WATCH {pin} {newValue} {time}"
-                    snprintf(buffer, 64, "WATCH %s %hu %u", this->pin->id, newValue, now);
+                    snprintf_P(buffer, 64, PSTR("WATCH %s %hu %u"), this->pin->id, newValue, now);
                     api->println(command, buffer);
                 }
                 this->oldValue = newValue;
@@ -138,7 +138,7 @@ namespace TextDevices {
         char change[8];
         uint32_t settleTimeout = 0;
 
-        if (1 != sscanf(command->body, "watch %4s %n", pinID, &offset)) {
+        if (1 != sscanf_P(command->body, PSTR("watch %4s %n"), pinID, &offset)) {
             return false;
         }
         pin = api->getRawPin(command, pinID);
@@ -150,22 +150,22 @@ namespace TextDevices {
         command->body += offset;
         offset = 0;
 
-        if (2 == sscanf(command->body, "config %8s %u", change, &settleTimeout)) {
+        if (2 == sscanf_P(command->body, PSTR("config %8s %u"), change, &settleTimeout)) {
             watcher->pin = pin;
             watcher->config(api, command, change, settleTimeout);
             return true;
         }
 
-        if (sscanf(command->body, "start %n", &offset), offset) {
+        if (sscanf_P(command->body, PSTR("start %n"), &offset), offset) {
             watcher->start(api, command);
             return true;
         }
-        if (sscanf(command->body, "stop %n", &offset), offset) {
+        if (sscanf_P(command->body, PSTR("stop %n"), &offset), offset) {
             watcher->stop(api, command);
             return true;
         }
 
-        api->error(command, "unknown command");
+        api->error(command, F("unknown command"));
         return true;
     }
 

@@ -43,7 +43,7 @@ namespace TextDevices {
         unsigned long timeout = 1000000L;
 
         // FUTURE -- support low/off/high/on
-        if (sscanf(command->original, "pulsein %4s %hu %lu", pin, &value, &timeout) < 2) {
+        if (sscanf_P(command->original, PSTR("pulsein %4s %hu %lu"), pin, &value, &timeout) < 2) {
             return false;
         }
 
@@ -59,20 +59,19 @@ namespace TextDevices {
         }
 
         if (DIGITAL != raw->ioType || !raw->ioInput) {
-            api->error(command, "pin should be configured for digital input");
+            api->error(command, F("pin should be configured for digital input"));
             return true;
         }
-
 
         value = value ? HIGH : LOW;
         unsigned long time = pulseIn(raw->hwPin, value, timeout);
         char buffer[32];
         if (time) {
-            snprintf(buffer, 32, "PULSEIN %s %lu", raw->id, time);
+            snprintf_P(buffer, 32, PSTR("PULSEIN %s %lu"), raw->id, time);
             api->println(command, buffer);
         }
         else {
-            snprintf(buffer, 32, "PULSEIN %s TIMEOUT", raw->id);
+            snprintf_P(buffer, 32, PSTR("PULSEIN %s TIMEOUT"), raw->id);
             api->println(command, buffer);
         }
         return true;

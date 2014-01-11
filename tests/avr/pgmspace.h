@@ -20,44 +20,22 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-#include <TextDevices.h>
-#include <PulseinDevice.h>
-#include <ShiftersDevice.h>
-#include <ShortcutsDevice.h>
-#include <TimersDevice.h>
-#include <WatchersDevice.h>
+//
+// This mocks out the AVR pgmspace API.
+//
 
-using namespace TextDevices;
+#ifndef __PGMSPACE_H_
+#define __PGMSPACE_H_ 1
 
-Devices             devices;
-//PulseinDevice       pi;
-//ShiftersDevice      shifters;
-//ShortcutsDevice     shortcuts;
-//TimersDevice        timers;
-//WatchersDevice      watchers;
 
-int freeRam()
-{
-    extern int __heap_start, *__brkval;
-    int v;
-    return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
-}
+struct __FlashStringHelper {};
+#define F(msg) ((const __FlashStringHelper *) msg)
+#define PSTR(msg) (msg)
 
-void setup() {
-    Serial.begin(9600);
-    devices.setup(&Serial);
-//  devices.registerDevice(&pi);
-//  devices.registerDevice(&shifters);
-//  devices.registerDevice(&shortcuts);
-//  devices.registerDevice(&timers);
-//  devices.registerDevice(&watchers);
-    Serial.println("----BOOTED----");
-    Serial.print("free ram:  ");
-    Serial.print(freeRam());
-    Serial.println(" bytes");
-}
+#define snprintf_P(...) snprintf(__VA_ARGS__)
+#define sscanf_P(...) sscanf(__VA_ARGS__)
+#define strncmp_P(...) strncmp(__VA_ARGS__)
+#define strncpy_P(...) strncpy(__VA_ARGS__)
 
-void loop() {
-    devices.loop();
-}
 
+#endif

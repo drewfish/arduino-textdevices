@@ -21,6 +21,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 #include "TextDevices.h"
+#include <avr/pgmspace.h>
 namespace TextDevices {
 
 
@@ -48,7 +49,7 @@ namespace TextDevices {
                 int offset = 0;
                 uint16_t value;
 
-                if (1 != sscanf(command->body, "pin %3s %n", bufferA, &offset)) {
+                if (1 != sscanf_P(command->body, PSTR("pin %3s %n"), bufferA, &offset)) {
                     return false;
                 }
                 RawPin *pin = api->getRawPin(command, bufferA);
@@ -59,10 +60,10 @@ namespace TextDevices {
                 command->body += offset;
                 offset = 0;
 
-                if (sscanf(command->body, "config %n", &offset), offset) {
+                if (sscanf_P(command->body, PSTR("config %n"), &offset), offset) {
                     command->body += offset;
                     offset = 0;
-                    if (sscanf(command->body, "%8s %8s %n", bufferA, bufferB, &offset), offset) {
+                    if (sscanf_P(command->body, PSTR("%8s %8s %n"), bufferA, bufferB, &offset), offset) {
                         command->body += offset;
                         this->configureRawPin(api, command, pin, 
                                 (bufferA[0] == 'd' ? DIGITAL : ANALOG),
@@ -72,33 +73,33 @@ namespace TextDevices {
                         return true;
                     }
                     // got "config" but it was empty/malformed
-                    api->error(command, "malformed command");
+                    api->error(command, F("malformed command"));
                     return true;
                 }
 
-                if (sscanf(command->body, "read %n", &offset), offset) {
+                if (sscanf_P(command->body, PSTR("read %n"), &offset), offset) {
                     if (! api->claimPin(command, pin)) {
                         // error already reported
                         return true;
                     }
                     if (! pin->ioInput) {
-                        api->error(command, "pin not configured to read");
+                        api->error(command, F("pin not configured to read"));
                         return true;
                     }
                     value = pin->rawRead();
-                    snprintf(bufferA, 16, "PIN %3s %hu", pin->id, value);
+                    snprintf_P(bufferA, 16, PSTR("PIN %3s %hu"), pin->id, value);
                     api->println(command, bufferA);
                     return true;
                 }
 
                 // FUTURE -- support low/off/high/on
-                if (1 == sscanf(command->body, "write %hu", &value)) {
+                if (1 == sscanf_P(command->body, PSTR("write %hu"), &value)) {
                     if (! api->claimPin(command, pin)) {
                         // error already reported
                         return true;
                     }
                     if (pin->ioInput) {
-                        api->error(command, "pin not configured to write");
+                        api->error(command, F("pin not configured to write"));
                         return true;
                     }
                     pin->rawWrite(value);
@@ -142,12 +143,12 @@ namespace TextDevices {
                 else {
                     if (input) {
                         if (DIGITAL == pin->idType) {
-                            api->error(command, "digital pin can't be configured for analog input");
+                            api->error(command, F("digital pin can't be configured for analog input"));
                             return false;
                         }
                         else {
                             if (DIGITAL == pin->ioType) {
-                                api->error(command, "analog pin configured to digital is stuck that way");
+                                api->error(command, F("analog pin configured to digital is stuck that way"));
                                 return false;
                             }
                         }
@@ -159,7 +160,7 @@ namespace TextDevices {
                             // output before calling analogWrite()."
                         }
                         else {
-                            api->error(command, "pin doesn't support analog output (PWM)");
+                            api->error(command, F("pin doesn't support analog output (PWM)"));
                             return false;
                         }
                     }
@@ -216,7 +217,7 @@ namespace TextDevices {
                 if (p < analogStart) {
                     pin->idType = DIGITAL;
                     pin->idNum = p;
-                    snprintf(pin->id, 4, "d%02u", pin->idNum);
+                    snprintf_P(pin->id, 4, PSTR("d%02u"), pin->idNum);
                     pin->ioType = DIGITAL;
                     // defaults according to http://arduino.cc/en/Tutorial/DigitalPins
                     pin->ioInput = true;
@@ -224,7 +225,7 @@ namespace TextDevices {
                 else {
                     pin->idType = ANALOG;
                     pin->idNum = p - analogStart;
-                    snprintf(pin->id, 4, "a%02u", pin->idNum);
+                    snprintf_P(pin->id, 4, PSTR("a%02u"), pin->idNum);
                     pin->ioType = ANALOG;
                     pin->ioInput = true;
                 }
@@ -252,7 +253,7 @@ namespace TextDevices {
                     return;
                 }
             }
-            api->error(command, "no room to register device");
+            api->error(command, F("no room to register device"));
         }
 
 
@@ -296,8 +297,10 @@ namespace TextDevices {
 
     void
     Devices::setup(Stream* stream) {
+        char buffer[6];
+        strncpy_P(buffer, PSTR("setup"), 6);
         Command command;
-        command.original = "setup";
+        command.original = buffer;
         command.body = command.original;
         command.device = NULL;
         this->_d->setup(this->api, &command, stream);
@@ -305,15 +308,16 @@ namespace TextDevices {
 
 
     // These aren't registered during setup() but are available afterwards.
-    //devices->registerDevice(new WatchersDevice());
-    //devices->registerDevice(new TimersDevice(count));
-    //devices->registerDevice(new PWMDevice());
     //devices->registerDevice(new PulseinDevice());
     //devices->registerDevice(new ShiftersDevice(count));
+    //devices->registerDevice(new TimersDevice(count));
+    //devices->registerDevice(new WatchersDevice());
     void
     Devices::registerDevice(IDevice* device) {
+        char buffer[15];
+        strncpy_P(buffer, PSTR("registerDevice"), 15);
         Command command;
-        command.original = "registerDevice";
+        command.original = buffer;
         command.body = command.original;
         command.device = NULL;
         this->_d->registerDevice(this->api, &command, device);
@@ -325,8 +329,10 @@ namespace TextDevices {
         Command command;
 
         // poll
+        char buffer[5];
+        strncpy_P(buffer, PSTR("poll"), 5);
         uint32_t now = millis();
-        command.original = "poll";
+        command.original = buffer;
         command.body = command.original;
         command.device = NULL;
         command.hasError = false;
@@ -356,7 +362,7 @@ namespace TextDevices {
                     command.hasError = false;
                     if (! this->api->dispatch(&command)) {
                         command.device = NULL;
-                        this->api->error(&command, "unknown command");
+                        this->api->error(&command, F("unknown command"));
                     }
                 }
 
@@ -427,14 +433,14 @@ namespace TextDevices {
     API::getRawPin(Command* command, const char* id) {
         uint8_t num;
         PinType type;
-        if (1 == sscanf(id, "d%hhu", &num)) {
+        if (1 == sscanf_P(id, PSTR("d%hhu"), &num)) {
             type = DIGITAL;
-        } else if (1 == sscanf(id, "a%hhu", &num)) {
+        } else if (1 == sscanf_P(id, PSTR("a%hhu"), &num)) {
             type = ANALOG;
-        } else if (1 == sscanf(id, "%hhu", &num)) {
+        } else if (1 == sscanf_P(id, PSTR("%hhu"), &num)) {
             type = DIGITAL;
         } else {
-            this->error(command, "unknown pin");
+            this->error(command, F("unknown pin"));
             return NULL;
         }
         for (size_t p = 0; p < TEXTDEVICES_PINCOUNT; p++) {
@@ -443,7 +449,7 @@ namespace TextDevices {
                 return pin;
             }
         }
-        this->error(command, "unknown pin");
+        this->error(command, F("unknown pin"));
         return NULL;
     }
 
@@ -455,7 +461,7 @@ namespace TextDevices {
             return true;
         }
         if (pin->claimant != &(this->_d->pinsDevice)) {
-            this->error(command, "pin already claimed");
+            this->error(command, F("pin already claimed"));
             return false;
         }
         pin->claimant = command->device;
@@ -466,7 +472,7 @@ namespace TextDevices {
     bool
     API::unclaimPin(Command* command, RawPin* pin) {
         if (pin->claimant != command->device) {
-            this->error(command, "device tried to unclaim a pin that it didn't own");
+            this->error(command, F("device tried to unclaim a pin that it didn't own"));
             return false;
         }
         pin->claimant = &(this->_d->pinsDevice);
@@ -476,6 +482,12 @@ namespace TextDevices {
 
     bool
     API::dispatch(Command* command) {
+        if (0 == strncmp_P(command->original, PSTR("freeram"), 7)) {
+            char buffer[8];
+            snprintf_P(buffer, 8, PSTR("%d"), this->freeRam());
+            this->println(command, buffer);
+            return true;
+        }
         for (size_t d = 0; d < TEXTDEVICES_DEVICECOUNT; d++) {
             if (this->_d->registered[d]) {
                 command->device = this->_d->registered[d];
@@ -502,20 +514,39 @@ namespace TextDevices {
 
     void
     API::error(Command* command, const char* msg) {
-        this->_d->stream->print("ERROR ");
+        this->_d->stream->print(F("ERROR "));
         if (msg) {
             this->_d->stream->print(msg);
         }
         if (command) {
             command->hasError = true;
             if (command->device) {
-                this->_d->stream->print(" FROM ");
+                this->_d->stream->print(F(" FROM "));
                 this->_d->stream->print(command->device->getDeviceName());
             }
-            this->_d->stream->print(" WHEN ");
+            this->_d->stream->print(F(" WHEN "));
             this->_d->stream->print(command->original);
         }
-        this->_d->stream->println("");
+        this->_d->stream->println(F(""));
+    }
+
+
+    void
+    API::error(Command* command, const __FlashStringHelper* msg) {
+        this->_d->stream->print(F("ERROR "));
+        if (msg) {
+            this->_d->stream->print(msg);
+        }
+        if (command) {
+            command->hasError = true;
+            if (command->device) {
+                this->_d->stream->print(F(" FROM "));
+                this->_d->stream->print(command->device->getDeviceName());
+            }
+            this->_d->stream->print(F(" WHEN "));
+            this->_d->stream->print(command->original);
+        }
+        this->_d->stream->println(F(""));
     }
 
 
