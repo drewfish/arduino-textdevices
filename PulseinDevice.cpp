@@ -47,13 +47,13 @@ namespace TextDevices {
             return true;
         }
 
-        if (! api->claimPin(command, raw)) {
-            // error already reported
+        if (DIGITAL != raw->ioType || !raw->ioInput) {
+            api->error(command, F("pin should be configured for digital input"));
             return true;
         }
 
-        if (DIGITAL != raw->ioType || !raw->ioInput) {
-            api->error(command, F("pin should be configured for digital input"));
+        if (! api->claimPin(command, raw)) {
+            // error already reported
             return true;
         }
 
@@ -68,6 +68,8 @@ namespace TextDevices {
             snprintf_P(buffer, 32, PSTR("PULSEIN %s TIMEOUT"), raw->id);
             api->println(command, buffer);
         }
+
+        api->unclaimPin(command, raw);
         return true;
     }
 
