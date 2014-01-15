@@ -24,12 +24,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace TextDevices {
 
 
-    const char*
-    PulseinDevice::getDeviceName() {
-        return "pulsein";
-    }
-
-
     void
     PulseinDevice::poll(API*, Command*, uint32_t) {
         // nothing to do

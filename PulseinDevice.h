@@ -28,7 +28,6 @@ namespace TextDevices {
 
     class PulseinDevice: public IDevice {
         public:
-            const char* getDeviceName();
             void poll(API*, Command*, uint32_t);
             bool dispatch(API*, Command*);
     };

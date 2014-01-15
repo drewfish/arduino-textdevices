@@ -113,12 +113,6 @@ namespace TextDevices {
     }
 
 
-    const char*
-    WatchersDevice::getDeviceName() {
-        return "watchers";
-    }
-
-
     void
     WatchersDevice::poll(API* api, Command* command, uint32_t now) {
         for (uint8_t p = 0; p < TEXTDEVICES_PINCOUNT; p++) {

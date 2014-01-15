@@ -77,12 +77,6 @@ namespace TextDevices {
     }
 
 
-    const char*
-    TimersDevice::getDeviceName() {
-        return "timers";
-    }
-
-
     void
     TimersDevice::poll(API* api, Command* command, uint32_t now) {
         Timer *timer = NULL;

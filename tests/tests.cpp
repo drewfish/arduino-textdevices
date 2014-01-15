@@ -77,11 +77,11 @@ TEST(WatchersDevice, config) {
     );
     devices->loop();
     CHECK_TEXT(5 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR unknown command FROM watchers WHEN watch d0", Arduino_changes[0].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR unknown command FROM watchers WHEN watch d0 config", Arduino_changes[1].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR unknown command FROM watchers WHEN watch d0 config change", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN watch d0", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN watch d0 config", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN watch d0 config change", Arduino_changes[2].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(1,1)", Arduino_changes[3].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured for read FROM watchers WHEN watch d1 config change 20", Arduino_changes[4].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured for read WHEN watch d1 config change 20", Arduino_changes[4].c_str());
 }
 
 
@@ -185,11 +185,11 @@ TEST(WatchersDevice, stop_start) {
     );
     devices->loop();
     CHECK_TEXT(5 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR watcher hasn't been configured FROM watchers WHEN watch d0 start", Arduino_changes[0].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR watcher hasn't been configured FROM watchers WHEN watch d0 stop", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR watcher hasn't been configured WHEN watch d0 start", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR watcher hasn't been configured WHEN watch d0 stop", Arduino_changes[1].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(1,1)", Arduino_changes[2].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured for read FROM watchers WHEN watch d1 config change 20", Arduino_changes[3].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR watcher not started FROM watchers WHEN watch d0 stop", Arduino_changes[4].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured for read WHEN watch d1 config change 20", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR watcher not started WHEN watch d0 stop", Arduino_changes[4].c_str());
     Arduino_changes_reset();
 
     // start, make changes, confirm reports of changes
@@ -348,10 +348,10 @@ TEST(TimersDevice, config) {
     );
     devices->loop();
     CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR unknown command FROM timers WHEN timer 0", Arduino_changes[0].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR unknown command FROM timers WHEN timer 0 config", Arduino_changes[1].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR invalid config FROM timers WHEN timer 0 config 500", Arduino_changes[2].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR invalid timer id FROM timers WHEN timer 5 config 500 pin 0 write 1", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN timer 0", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN timer 0 config", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR invalid config WHEN timer 0 config 500", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR invalid timer id WHEN timer 5 config 500 pin 0 write 1", Arduino_changes[3].c_str());
 }
 
 
@@ -363,7 +363,7 @@ TEST(TimersDevice, run_once) {
     );
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR unknown command FROM timers WHEN timer 0 run", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN timer 0 run", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 499;
@@ -375,7 +375,7 @@ TEST(TimersDevice, run_once) {
     Arduino_millis += 1;
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 1", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 1;
@@ -403,7 +403,7 @@ TEST(TimersDevice, run_many) {
     Arduino_millis += 1;    // config + 500
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 1", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 1;    // config + 501
@@ -415,7 +415,7 @@ TEST(TimersDevice, run_many) {
     Arduino_millis += 499;  // config + 1000
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 1", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 1;    // config + 1001
@@ -427,7 +427,7 @@ TEST(TimersDevice, run_many) {
     Arduino_millis += 499;  // config + 1500
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 1", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 1;    // config + 1501
@@ -454,13 +454,13 @@ TEST(TimersDevice, stop_start) {
     Arduino_millis += 4;
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 0", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 0", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 4;
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 0", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 0", Arduino_changes[0].c_str());
 
     Arduino_set_input(
             "timer 0 stop\n"
@@ -481,13 +481,13 @@ TEST(TimersDevice, stop_start) {
     Arduino_millis += 4;
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 0", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 0", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 4;
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 0", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 0", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 4;
@@ -522,7 +522,7 @@ TEST(TimersDevice, multiple_timers) {
     devices->loop();
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 0", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 0", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 1;        // start + 5
@@ -535,7 +535,7 @@ TEST(TimersDevice, multiple_timers) {
     devices->loop();
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 1", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 1;        // start + 7
@@ -548,7 +548,7 @@ TEST(TimersDevice, multiple_timers) {
     devices->loop();
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 0", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 0", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 1;        // start + 9
@@ -561,7 +561,7 @@ TEST(TimersDevice, multiple_timers) {
     devices->loop();
     devices->loop();
     CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 1", Arduino_changes[0].c_str());
 
     Arduino_changes_reset();
     Arduino_millis += 1;        // start + 11
@@ -615,13 +615,13 @@ TEST(ShiftersDevice, shiftin) {
     STRCMP_EQUAL("ARDUINO-- shiftOut(0,1,1,79)", Arduino_changes[1].c_str());
     STRCMP_EQUAL("ARDUINO-- shiftOut(0,1,1,121)", Arduino_changes[2].c_str());
     STRCMP_EQUAL("ARDUINO-- shiftOut(0,1,1,33)", Arduino_changes[3].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR shifter not yet configured FROM shifters WHEN shift 1 in 3", Arduino_changes[4].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR invalid shifter id FROM shifters WHEN shift 55 config d0 d1 msb", Arduino_changes[5].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR shifter not yet configured FROM shifters WHEN shift 0 in 3", Arduino_changes[6].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM shifters WHEN shift 0 config d55 a33 msb", Arduino_changes[7].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM shifters WHEN shift 0 config d55 a33 msb", Arduino_changes[8].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR unknown data pin FROM shifters WHEN shift 0 config d55 a33 msb", Arduino_changes[9].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR invalid config FROM shifters WHEN shift 0 config d2", Arduino_changes[10].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR shifter not yet configured WHEN shift 1 in 3", Arduino_changes[4].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR invalid shifter id WHEN shift 55 config d0 d1 msb", Arduino_changes[5].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR shifter not yet configured WHEN shift 0 in 3", Arduino_changes[6].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown pin WHEN shift 0 config d55 a33 msb", Arduino_changes[7].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown pin WHEN shift 0 config d55 a33 msb", Arduino_changes[8].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown data pin WHEN shift 0 config d55 a33 msb", Arduino_changes[9].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR invalid config WHEN shift 0 config d2", Arduino_changes[10].c_str());
 }
 
 
@@ -668,8 +668,8 @@ TEST(PulseinDevice, all) {
     CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
     STRCMP_EQUAL("SERIAL-- PULSEIN d00 11", Arduino_changes[0].c_str());
     STRCMP_EQUAL("SERIAL-- PULSEIN d00 TIMEOUT", Arduino_changes[1].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM pulsein WHEN pulsein d33 1", Arduino_changes[2].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin should be configured for digital input FROM pulsein WHEN pulsein d1 1", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown pin WHEN pulsein d33 1", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin should be configured for digital input WHEN pulsein d1 1", Arduino_changes[3].c_str());
 }
 
 
@@ -714,7 +714,7 @@ TEST(ShortcutsDevice, all) {
     CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
     STRCMP_EQUAL("SERIAL-- PIN d00 0", Arduino_changes[0].c_str());
     STRCMP_EQUAL("ARDUINO-- digitalWrite(1,1)", Arduino_changes[1].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) FROM pins WHEN pwm d0 100", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) WHEN pwm d0 100", Arduino_changes[2].c_str());
     STRCMP_EQUAL("ARDUINO-- analogWrite(3,100)", Arduino_changes[3].c_str());
 }
 
@@ -758,10 +758,10 @@ TEST(PinsDevice, digitalpin_config) {
     STRCMP_EQUAL("ARDUINO-- pinMode(0,0)", Arduino_changes[2].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(0,1)", Arduino_changes[3].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(0,0)", Arduino_changes[4].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR digital pin can't be configured for analog input FROM pins WHEN pin d3 config analog input", Arduino_changes[5].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR digital pin can't be configured for analog input WHEN pin d3 config analog input", Arduino_changes[5].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(3,0)", Arduino_changes[6].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR malformed command FROM pins WHEN pin d3 config", Arduino_changes[7].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) FROM pins WHEN pin d0 config analog output", Arduino_changes[8].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR malformed command WHEN pin d3 config", Arduino_changes[7].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) WHEN pin d0 config analog output", Arduino_changes[8].c_str());
 }
 
 
@@ -784,9 +784,9 @@ TEST(PinsDevice, digitalpin_read) {
     STRCMP_EQUAL("SERIAL-- PIN d00 0", Arduino_changes[1].c_str());
     STRCMP_EQUAL("SERIAL-- PIN d13 1", Arduino_changes[2].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(2,1)", Arduino_changes[3].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to read FROM pins WHEN pin d2 read", Arduino_changes[4].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM pins WHEN pin d222 read", Arduino_changes[5].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM pins WHEN pin 16 read", Arduino_changes[6].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to read WHEN pin d2 read", Arduino_changes[4].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown pin WHEN pin d222 read", Arduino_changes[5].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown pin WHEN pin 16 read", Arduino_changes[6].c_str());
 }
 
 
@@ -808,13 +808,13 @@ TEST(PinsDevice, digitalpin_write) {
     );
     devices->loop();
     CHECK_TEXT(12 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 1", Arduino_changes[0].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(0,1)", Arduino_changes[1].c_str());
     STRCMP_EQUAL("ARDUINO-- digitalWrite(0,1)", Arduino_changes[2].c_str());
     STRCMP_EQUAL("ARDUINO-- digitalWrite(0,1)", Arduino_changes[3].c_str());
     STRCMP_EQUAL("ARDUINO-- digitalWrite(0,0)", Arduino_changes[4].c_str());
     STRCMP_EQUAL("ARDUINO-- digitalWrite(0,1)", Arduino_changes[5].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) FROM pins WHEN pin d0 config analog output", Arduino_changes[6].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) WHEN pin d0 config analog output", Arduino_changes[6].c_str());
     STRCMP_EQUAL("ARDUINO-- analogWrite(3,1)", Arduino_changes[7].c_str());
     STRCMP_EQUAL("ARDUINO-- analogWrite(3,100)", Arduino_changes[8].c_str());
     STRCMP_EQUAL("ARDUINO-- analogWrite(3,255)", Arduino_changes[9].c_str());
@@ -835,12 +835,12 @@ TEST(PinsDevice, analogpin_config) {
     );
     devices->loop();
     CHECK_TEXT(6 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR digital pin can't be configured for analog input FROM pins WHEN pin d0 config analog input", Arduino_changes[0].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) FROM pins WHEN pin a0 config analog output", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR digital pin can't be configured for analog input WHEN pin d0 config analog input", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) WHEN pin a0 config analog output", Arduino_changes[1].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(15,2)", Arduino_changes[2].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(15,1)", Arduino_changes[3].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(15,0)", Arduino_changes[4].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR analog pin configured to digital is stuck that way FROM pins WHEN pin a1 config analog input", Arduino_changes[5].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR analog pin configured to digital is stuck that way WHEN pin a1 config analog input", Arduino_changes[5].c_str());
 }
 
 
@@ -872,8 +872,8 @@ TEST(PinsDevice, analogpin_write) {
     CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
     STRCMP_EQUAL("ARDUINO-- pinMode(14,1)", Arduino_changes[0].c_str());
     STRCMP_EQUAL("ARDUINO-- digitalWrite(14,1)", Arduino_changes[1].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) FROM pins WHEN pin a1 config analog output", Arduino_changes[2].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin a1 write 13", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin doesn't support analog output (PWM) WHEN pin a1 config analog output", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin a1 write 13", Arduino_changes[3].c_str());
 }
 
 
@@ -924,40 +924,39 @@ TEST(TextDevices, weirdinput) {
     );
     devices->loop();
     CHECK_TEXT(2 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[0].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write FROM pins WHEN pin d0 write 1", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 1", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured to write WHEN pin d0 write 1", Arduino_changes[1].c_str());
 }
 
 
 TEST(TextDevices, pin_ids) {
     class A : public IDevice {
         public:
-            const char* getDeviceName() { return "A"; }
             bool dispatch(API*, Command*) { return false; }
             void poll(API* api, Command* command, uint32_t) {
                 RawPin* pin;
                 pin = api->getRawPin(command, "");
                 CHECK_EQUAL(NULL, pin);
                 CHECK_EQUAL(1, Arduino_changes.size());
-                STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM A WHEN poll", Arduino_changes[0].c_str());
+                STRCMP_EQUAL("SERIAL-- ERROR unknown pin WHEN poll", Arduino_changes[0].c_str());
                 Arduino_changes_reset();
             
                 pin = api->getRawPin(command, "foo");
                 CHECK_EQUAL(NULL, pin);
                 CHECK_EQUAL(1, Arduino_changes.size());
-                STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM A WHEN poll", Arduino_changes[0].c_str());
+                STRCMP_EQUAL("SERIAL-- ERROR unknown pin WHEN poll", Arduino_changes[0].c_str());
                 Arduino_changes_reset();
 
                 pin = api->getRawPin(command, "d-1");
                 CHECK_EQUAL(NULL, pin);
                 CHECK_EQUAL(1, Arduino_changes.size());
-                STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM A WHEN poll", Arduino_changes[0].c_str());
+                STRCMP_EQUAL("SERIAL-- ERROR unknown pin WHEN poll", Arduino_changes[0].c_str());
                 Arduino_changes_reset();
 
                 pin = api->getRawPin(command, "-1");
                 CHECK_EQUAL(NULL, pin);
                 CHECK_EQUAL(1, Arduino_changes.size());
-                STRCMP_EQUAL("SERIAL-- ERROR unknown pin FROM A WHEN poll", Arduino_changes[0].c_str());
+                STRCMP_EQUAL("SERIAL-- ERROR unknown pin WHEN poll", Arduino_changes[0].c_str());
                 Arduino_changes_reset();
 
                 pin = api->getRawPin(command, "d0");
@@ -1165,11 +1164,6 @@ TEST(TextDevices, pin_ownership) {
             API*        api;
         public:
             A(const char* i) : id(i) {}
-            const char* getDeviceName() {
-                if (this->id)
-                    return this->id;
-                return "A";
-            }
             bool dispatch(API*, Command*) { return false; }
             void poll(API* api, Command* command, uint32_t) {
                 this->api = api;
@@ -1179,14 +1173,18 @@ TEST(TextDevices, pin_ownership) {
                 command.original = "claim";
                 command.body = command.original;
                 command.device = this;
-                this->api->claimPin(&command, this->api->getRawPin(&command, "d0"));
+                if (! this->api->claimPin(&command, this->api->getRawPin(&command, "d0"))) {
+                    this->api->error(&command, this->id);
+                }
             }
             void unclaim() {
                 Command command;
                 command.original = "unclaim";
                 command.body = command.original;
                 command.device = this;
-                this->api->unclaimPin(&command, this->api->getRawPin(&command, "d0"));
+                if (! this->api->unclaimPin(&command, this->api->getRawPin(&command, "d0"))) {
+                    this->api->error(&command, this->id);
+                }
             }
     };
     A a("a");
@@ -1201,10 +1199,13 @@ TEST(TextDevices, pin_ownership) {
     b.claim();
     a.claim();
     b.unclaim();
-    CHECK_EQUAL(3, Arduino_changes.size());
-    STRCMP_EQUAL("SERIAL-- ERROR device tried to unclaim a pin that it didn't own FROM a WHEN unclaim", Arduino_changes[0].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin already claimed FROM b WHEN claim", Arduino_changes[1].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin already claimed FROM a WHEN claim", Arduino_changes[2].c_str());
+    CHECK_EQUAL(6, Arduino_changes.size());
+    STRCMP_EQUAL("SERIAL-- ERROR device tried to unclaim a pin that it didn't own WHEN unclaim", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR a WHEN unclaim", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin already claimed WHEN claim", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR b WHEN claim", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin already claimed WHEN claim", Arduino_changes[4].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR a WHEN claim", Arduino_changes[5].c_str());
 }
 
 

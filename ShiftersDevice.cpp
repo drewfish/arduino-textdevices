@@ -128,12 +128,6 @@ namespace TextDevices {
     }
 
 
-    const char*
-    ShiftersDevice::getDeviceName() {
-        return "shifters";
-    }
-
-
     void
     ShiftersDevice::poll(API*, Command*, uint32_t) {
         // nothing to do

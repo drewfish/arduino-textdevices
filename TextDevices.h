@@ -80,9 +80,6 @@ namespace TextDevices {
         public:
             virtual ~IDevice() {};
 
-            // return a textual identification of the device
-            virtual const char* getDeviceName() = 0;
-
             // called each time through loop()
             virtual void poll(API*, Command*, uint32_t) = 0;
 

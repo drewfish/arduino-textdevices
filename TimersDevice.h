@@ -48,7 +48,6 @@ namespace TextDevices {
             };
             Timer timers[TEXTDEVICES_TIMERCOUNT];
         public:
-            const char* getDeviceName();
             void poll(API*, Command*, uint32_t);
             bool dispatch(API*, Command*);
             ~TimersDevice();

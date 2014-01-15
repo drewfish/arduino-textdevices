@@ -24,12 +24,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 namespace TextDevices {
 
 
-    const char*
-    ShortcutsDevice::getDeviceName() {
-        return "shortcuts";
-    }
-
-
     void
     ShortcutsDevice::poll(API*, Command*, uint32_t) {
         // nothing to do

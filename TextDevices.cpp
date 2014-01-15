@@ -30,12 +30,6 @@ namespace TextDevices {
     //-----------------------------------------------------------------------
     class PinsDevice: public IDevice {
         public:
-            const char*
-            getDeviceName() {
-                return "pins";
-            }
-
-
             void
             poll(API*, Command*, uint32_t) {
                 // nothing to do
@@ -520,10 +514,6 @@ namespace TextDevices {
         }
         if (command) {
             command->hasError = true;
-            if (command->device) {
-                this->_d->stream->print(F(" FROM "));
-                this->_d->stream->print(command->device->getDeviceName());
-            }
             this->_d->stream->print(F(" WHEN "));
             this->_d->stream->print(command->original);
         }
@@ -539,10 +529,6 @@ namespace TextDevices {
         }
         if (command) {
             command->hasError = true;
-            if (command->device) {
-                this->_d->stream->print(F(" FROM "));
-                this->_d->stream->print(command->device->getDeviceName());
-            }
             this->_d->stream->print(F(" WHEN "));
             this->_d->stream->print(command->original);
         }
