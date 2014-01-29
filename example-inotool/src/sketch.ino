@@ -30,31 +30,21 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 using namespace TextDevices;
 
 Devices             devices;
-//  PulseinDevice       pi;
-//  ShiftersDevice      shifters;
-//  ShortcutsDevice     shortcuts;
-//  TimersDevice        timers;
-//  WatchersDevice      watchers;
-
-int freeRam()
-{
-    extern int __heap_start, *__brkval;
-    int v;
-    return (int) &v - (__brkval == 0 ? (int) &__heap_start : (int) __brkval);
-}
+PulseinDevice       pulsein;
+ShiftersDevice      shifters;
+ShortcutsDevice     shortcuts;
+TimersDevice        timers;
+WatchersDevice      watchers;
 
 void setup() {
     Serial.begin(9600);
     devices.setup(&Serial);
-//  devices.registerDevice(&pi);
-//  devices.registerDevice(&shifters);
-//  devices.registerDevice(&shortcuts);
-//  devices.registerDevice(&timers);
-//  devices.registerDevice(&watchers);
+    devices.registerDevice(&pulsein);
+    devices.registerDevice(&shifters);
+    devices.registerDevice(&shortcuts);
+    devices.registerDevice(&timers);
+    devices.registerDevice(&watchers);
     Serial.println(F("----BOOTED----"));
-    Serial.print(F("free ram:  "));
-    Serial.print(freeRam());
-    Serial.println(F(" bytes"));
 }
 
 void loop() {
