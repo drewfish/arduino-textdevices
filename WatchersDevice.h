@@ -23,6 +23,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef TEXTDEVICES_WATCHERSDEVICE
 #define TEXTDEVICES_WATCHERSDEVICE
 
+
+#ifndef TEXTDEVICES_WATCHERCOUNT
+    // maximum number of watchers
+    #define TEXTDEVICES_WATCHERCOUNT 4
+#endif
+
+
 #include "TextDevices.h"
 namespace TextDevices {
 
@@ -34,18 +41,20 @@ namespace TextDevices {
                 FALL,           // whether to report falling value
             };
             struct Watcher {
+                uint8_t     id;
                 RawPin*     pin;
                 uint8_t     flags;
                 uint32_t    settleTimeout;
                 uint16_t    oldValue;
                 uint32_t    changeTimeout;  // also indicates substate of "started"
-                void config(API*, Command*, const char*, uint32_t);
+                void config(API*, Command*);
                 void start(API*, Command*);
                 void stop(API*, Command*);
                 void poll(API*, Command*, uint32_t);
             };
-            Watcher watchers[TEXTDEVICES_PINCOUNT];
+            Watcher watchers[TEXTDEVICES_WATCHERCOUNT];
         public:
+            WatchersDevice();
             void poll(API*, Command*, uint32_t);
             bool dispatch(API*, Command*);
     };

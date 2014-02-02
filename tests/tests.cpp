@@ -68,26 +68,28 @@ TEST_GROUP(WatchersDevice) {
 
 TEST(WatchersDevice, config) {
     Arduino_set_input(
-            "watch d0\n"
-            "watch d0 config\n"
-            "watch d0 config change\n"
-            "watch d0 config change 20\n"
+            "watch 0\n"
+            "watch 0 config\n"
+            "watch 0 config d0\n"
+            "watch 0 config d0 change\n"
+            "watch 0 config d0 change 20\n"
             "pin d1 config digital output\n"
-            "watch d1 config change 20\n"
+            "watch 1 config d1 change 20\n"
     );
     devices->loop();
-    CHECK_TEXT(5 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN watch d0", Arduino_changes[0].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN watch d0 config", Arduino_changes[1].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN watch d0 config change", Arduino_changes[2].c_str());
-    STRCMP_EQUAL("ARDUINO-- pinMode(1,1)", Arduino_changes[3].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured for read WHEN watch d1 config change 20", Arduino_changes[4].c_str());
+    CHECK_TEXT(6 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN watch 0", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR invalid config WHEN watch 0 config", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR invalid config WHEN watch 0 config d0", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR invalid config WHEN watch 0 config d0 change", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("ARDUINO-- pinMode(1,1)", Arduino_changes[4].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured for read WHEN watch 1 config d1 change 20", Arduino_changes[5].c_str());
 }
 
 
 TEST(WatchersDevice, run_no_changes) {
     Arduino_set_input(
-            "watch d0 config change 20\n"
+            "watch 0 config d0 change 20\n"
     );
     devices->loop();
     CHECK_TEXT(0 == Arduino_changes.size(), "wrong number of changes");
@@ -101,7 +103,7 @@ TEST(WatchersDevice, run_no_changes) {
 
 TEST(WatchersDevice, run_change_within_timeout) {
     Arduino_set_input(
-            "watch d0 config change 13\n"
+            "watch 0 config d0 change 13\n"
     );
     Arduino_digitalRead_default = false;
     devices->loop();
@@ -144,7 +146,7 @@ TEST(WatchersDevice, run_change_within_timeout) {
 // changes happened, but return to oldValue by time changeTimeout triggers
 TEST(WatchersDevice, run_resettle_within_timeout) {
     Arduino_set_input(
-            "watch d0 config change 12\n"
+            "watch 0 config d0 change 12\n"
     );
     Arduino_digitalRead_default = false;
     devices->loop();
@@ -178,24 +180,24 @@ TEST(WatchersDevice, run_resettle_within_timeout) {
 TEST(WatchersDevice, stop_start) {
     // failure modes
     Arduino_set_input(
-            "watch d0 start\n"
-            "watch d0 stop\n"
-            "pin d1 config digital output\nwatch d1 config change 20\n"
-            "watch d0 config change 20\nwatch d0 stop\nwatch d0 stop\n"
+            "watch 0 start\n"
+            "watch 0 stop\n"
+            "pin d1 config digital output\nwatch 1 config d1 change 20\n"
+            "watch 0 config d0 change 20\nwatch 0 stop\nwatch 0 stop\n"
     );
     devices->loop();
     CHECK_TEXT(5 == Arduino_changes.size(), "wrong number of changes");
-    STRCMP_EQUAL("SERIAL-- ERROR watcher hasn't been configured WHEN watch d0 start", Arduino_changes[0].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR watcher hasn't been configured WHEN watch d0 stop", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR watcher hasn't been configured WHEN watch 0 start", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR watcher hasn't been configured WHEN watch 0 stop", Arduino_changes[1].c_str());
     STRCMP_EQUAL("ARDUINO-- pinMode(1,1)", Arduino_changes[2].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR pin not configured for read WHEN watch d1 config change 20", Arduino_changes[3].c_str());
-    STRCMP_EQUAL("SERIAL-- ERROR watcher not started WHEN watch d0 stop", Arduino_changes[4].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR pin not configured for read WHEN watch 1 config d1 change 20", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR watcher not started WHEN watch 0 stop", Arduino_changes[4].c_str());
     Arduino_changes_reset();
 
     // start, make changes, confirm reports of changes
     Arduino_set_input(
-            "watch d0 config change 6\n"
-            "watch d0 start\n"
+            "watch 0 config d0 change 6\n"
+            "watch 0 start\n"
     );
     Arduino_digitalRead_default = false;
     devices->loop();
@@ -215,7 +217,7 @@ TEST(WatchersDevice, stop_start) {
     // stop, make changes, confirm no reports made
     Arduino_digitalRead_default = false;
     Arduino_set_input(
-            "watch d0 stop\n"
+            "watch 0 stop\n"
     );
     devices->loop();
     Arduino_millis += 4;    // 4016
@@ -230,7 +232,7 @@ TEST(WatchersDevice, stop_start) {
 
     // start, make changes, confirm reports of changes
     Arduino_set_input(
-            "watch d0 start\n"
+            "watch 0 start\n"
     );
     Arduino_digitalRead_default = false;
     devices->loop();
@@ -249,7 +251,7 @@ TEST(WatchersDevice, stop_start) {
 
     // configure (different config), make changes, confirm reports of changes
     Arduino_set_input(
-            "watch d0 config falling 9\n"
+            "watch 0 config d0 falling 9\n"
     );
     Arduino_digitalRead_default = true;
     devices->loop();
@@ -275,7 +277,7 @@ TEST(WatchersDevice, stop_start) {
 
     // start, make more changes, confirm reports of changes
     Arduino_set_input(
-            "watch d0 start\n"
+            "watch 0 start\n"
     );
     devices->loop();
 

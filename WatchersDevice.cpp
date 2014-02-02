@@ -25,11 +25,25 @@ namespace TextDevices {
 
 
     void
-    WatchersDevice::Watcher::config(API* api, Command* command, const char* change, uint32_t settleTimeout) {
+    WatchersDevice::Watcher::config(API* api, Command* command) {
+        char pinID[4];
+        char change[8];
+        uint32_t settleTimeout = 0;
+
+        if (3 != sscanf_P(command->body, PSTR("%4s %8s %u"), pinID, change, &settleTimeout)) {
+            api->error(command, F("invalid config"));
+            return;
+        }
+        this->pin = api->getRawPin(command, pinID);
+        if (! this->pin) {
+            // error already reported
+            return;
+        }
         if (! this->pin->ioInput) {
             api->error(command, F("pin not configured for read"));
             return;
         }
+
         this->flags = 0;
         if ('c' == change[0] || 'r' == change[0]) {
             bitSet(this->flags, RISE);
@@ -113,11 +127,16 @@ namespace TextDevices {
     }
 
 
+    WatchersDevice::WatchersDevice() {
+        memset((void *)this->watchers, 0, sizeof(Watcher) * TEXTDEVICES_WATCHERCOUNT);
+    }
+
+
     void
     WatchersDevice::poll(API* api, Command* command, uint32_t now) {
-        for (uint8_t p = 0; p < TEXTDEVICES_PINCOUNT; p++) {
-            if (bitRead(this->watchers[p].flags, STARTED)) {
-                this->watchers[p].poll(api, command, now);
+        for (uint8_t w = 0; w < TEXTDEVICES_WATCHERCOUNT; w++) {
+            if (bitRead(this->watchers[w].flags, STARTED)) {
+                this->watchers[w].poll(api, command, now);
             }
         }
     }
@@ -125,36 +144,34 @@ namespace TextDevices {
 
     bool
     WatchersDevice::dispatch(API* api, Command* command) {
-        char pinID[4];
-        RawPin *pin;
+        uint8_t id = 0;
         int offset = 0;
         Watcher *watcher = NULL;
-        char change[8];
-        uint32_t settleTimeout = 0;
 
-        if (1 != sscanf_P(command->body, PSTR("watch %4s %n"), pinID, &offset)) {
+        if (1 != sscanf_P(command->body, PSTR("watch %hhu %n"), &id, &offset)) {
             return false;
         }
-        pin = api->getRawPin(command, pinID);
-        if (! pin) {
-            // error already reported
+        if (id >= TEXTDEVICES_WATCHERCOUNT) {
+            api->error(command, F("invalid watcher id"));
             return true;
         }
-        watcher = &(this->watchers[pin->hwPin]);
+        watcher = &(this->watchers[id]);
+        watcher->id = id;
+
         command->body += offset;
         offset = 0;
 
-        if (2 == sscanf_P(command->body, PSTR("config %8s %u"), change, &settleTimeout)) {
-            watcher->pin = pin;
-            watcher->config(api, command, change, settleTimeout);
+        if (sscanf_P(command->body, PSTR("config %n"), &offset), offset) {
+            command->body += offset;
+            watcher->config(api, command);
             return true;
         }
-
         if (sscanf_P(command->body, PSTR("start %n"), &offset), offset) {
             watcher->start(api, command);
             return true;
         }
         if (sscanf_P(command->body, PSTR("stop %n"), &offset), offset) {
+            command->body += offset;
             watcher->stop(api, command);
             return true;
         }
