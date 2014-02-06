@@ -123,8 +123,15 @@ namespace TextDevices {
             // if pin already claimed, reports error and returns false
             bool claimPin(Command*, RawPin*);
 
+            // attempts to claim the pin for the device handling the command
+            // if pin already claimed, reports error and returns false
+            bool claimPin(Command*, uint8_t);
+
             // releases claim to the pin
             bool unclaimPin(Command*, RawPin*);
+
+            // releases claim to the pin
+            bool unclaimPin(Command*, uint8_t);
 
             // Dispatches a command to all the registered devices,
             // one at a time, until one device handles it.
@@ -135,7 +142,13 @@ namespace TextDevices {
             void print(Command*, const char*);
 
             // sends output to the user
+            void print(Command*, const __FlashStringHelper*);
+
+            // sends output to the user
             void println(Command*, const char*);
+
+            // sends output to the user
+            void println(Command*, const __FlashStringHelper*);
 
             // reports an error to the user
             // automatically includes original command

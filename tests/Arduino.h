@@ -40,6 +40,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 using namespace std;
 
 
+typedef uint8_t byte;
+
 
 //-----------------------------------------------------------------------
 // memory debugging
@@ -60,6 +62,8 @@ int __heap_start = 0x80000000;
 #define NUM_DIGITAL_PINS 20
 #define NUM_ANALOG_INPUTS 6
 #define digitalPinHasPWM(p)         ((p) == 3 || (p) == 5 || (p) == 6 || (p) == 9 || (p) == 10 || (p) == 11)
+static const uint8_t SDA = 18;
+static const uint8_t SCL = 19;
 
 
 
@@ -333,6 +337,60 @@ Stream Serial;
 
 
 //-----------------------------------------------------------------------
+// Wire.h
+//-----------------------------------------------------------------------
+uint8_t     Wire_transmissionError = 0;
+vector<int> Wire_read;
+
+class TwoWire {
+    public:
+        void begin() {
+            Arduino_changes.push_back(string("WIRE-- begin()"));
+        }
+
+        uint8_t requestFrom(uint8_t address, uint8_t count) {
+            char buffer[128];
+            snprintf(buffer, 128, "WIRE-- requestFrom(%02X,%u)", address, count);
+            Arduino_changes.push_back(string(buffer));
+            return Wire_read.size();
+        }
+
+        void beginTransmission(uint8_t address) {
+            char buffer[128];
+            snprintf(buffer, 128, "WIRE-- beginTransmission(%02X)", address);
+            Arduino_changes.push_back(string(buffer));
+        }
+
+        uint8_t endTransmission() {
+            Arduino_changes.push_back(string("WIRE-- endTransmission()"));
+            return Wire_transmissionError;
+        }
+
+        size_t write(uint8_t data) {
+            char buffer[128];
+            snprintf(buffer, 128, "WIRE-- write(%02X)", data);
+            Arduino_changes.push_back(string(buffer));
+            return 1;
+        }
+
+        int available() {
+            Arduino_changes.push_back(string("WIRE-- available()"));
+            return Wire_read.size();
+        }
+
+        int read() {
+            int data = Wire_read.front();
+            Wire_read.erase(Wire_read.begin());
+            char buffer[128];
+            snprintf(buffer, 128, "WIRE-- read() %02X", data);
+            Arduino_changes.push_back(string(buffer));
+            return data;
+        }
+} Wire;
+
+
+
+//-----------------------------------------------------------------------
 // mock arduino hooks
 // (more above)
 //-----------------------------------------------------------------------
@@ -349,6 +407,8 @@ Arduino_reset() {
     }
     vector<uint8_t>().swap(Arduino_shiftIn);
     vector<int>().swap(Arduino_Serial_input);
+    vector<int>().swap(Wire_read);
+    Wire_transmissionError = 0;
     Arduino_changes_reset();
     vector<string>().swap(Serial.output);
 }

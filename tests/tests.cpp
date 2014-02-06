@@ -22,8 +22,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include "Arduino.h"
+#include "Wire.h"
 #include "TextDevices.h"
 #include "TextDevices.cpp"
+#include "I2CDevice.cpp"
 #include "PulseinDevice.cpp"
 #include "ShiftersDevice.cpp"
 #include "ShortcutsDevice.cpp"
@@ -672,6 +674,198 @@ TEST(PulseinDevice, all) {
     STRCMP_EQUAL("SERIAL-- PULSEIN d00 TIMEOUT", Arduino_changes[1].c_str());
     STRCMP_EQUAL("SERIAL-- ERROR unknown pin WHEN pulsein d33 1", Arduino_changes[2].c_str());
     STRCMP_EQUAL("SERIAL-- ERROR pin should be configured for digital input WHEN pulsein d1 1", Arduino_changes[3].c_str());
+}
+
+
+//-----------------------------------------------------------------------
+// I2CDevice class
+//-----------------------------------------------------------------------
+
+TEST_GROUP(I2CDevice) {
+    void setup() {
+        Arduino_reset();
+        devices = new Devices();
+        devices->setup(&Serial);
+        device = new I2CDevice();
+        devices->registerDevice(device);
+    }
+    void teardown() {
+        Arduino_reset();
+        delete devices;
+        devices = NULL;
+        delete device;
+        device = NULL;
+    }
+};
+
+
+TEST(I2CDevice, begin_calls_begin) {
+    Arduino_set_input(
+            "i2c begin\n"
+    );
+    devices->loop();
+    CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("WIRE-- begin()", Arduino_changes[0].c_str());
+}
+
+
+TEST(I2CDevice, read_without_all_args) {
+    Arduino_set_input(
+            "i2c read\n"
+            "i2c read AF\n"
+    );
+    devices->loop();
+    CHECK_TEXT(2 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN i2c read", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN i2c read af", Arduino_changes[1].c_str());
+}
+
+
+TEST(I2CDevice, read_works) {
+    Arduino_set_input(
+            "i2c read AF 3\n"
+    );
+    Wire_read.push_back(12);    // 0x0C
+    Wire_read.push_back(23);    // 0x17
+    Wire_read.push_back(34);    // 0x22
+    devices->loop();
+    CHECK_TEXT(8 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("WIRE-- requestFrom(AF,3)", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("WIRE-- available()", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("WIRE-- read() 0C", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("WIRE-- available()", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("WIRE-- read() 17", Arduino_changes[4].c_str());
+    STRCMP_EQUAL("WIRE-- available()", Arduino_changes[5].c_str());
+    STRCMP_EQUAL("WIRE-- read() 22", Arduino_changes[6].c_str());
+    STRCMP_EQUAL("SERIAL-- I2C READ 0C,17,22", Arduino_changes[7].c_str());
+}
+
+
+TEST(I2CDevice, write_without_address) {
+    Arduino_set_input(
+            "i2c write\n"
+    );
+    devices->loop();
+    CHECK_TEXT(1 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("SERIAL-- ERROR unknown command WHEN i2c write", Arduino_changes[0].c_str());
+}
+
+
+TEST(I2CDevice, write_no_bytes) {
+    Arduino_set_input(
+            "i2c write af\n"
+            "i2c write af \n"
+            "i2c write af     \n"
+    );
+    devices->loop();
+    CHECK_TEXT(3 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("SERIAL-- ERROR no bytes WHEN i2c write af", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR no bytes WHEN i2c write af ", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR no bytes WHEN i2c write af     ", Arduino_changes[2].c_str());
+}
+
+
+TEST(I2CDevice, write_with_odd_number_of_chars) {
+    Arduino_set_input(
+            "i2c write af 1\n"
+            "i2c write af 123\n"
+            "i2c write af 123,45\n"
+    );
+    devices->loop();
+    CHECK_TEXT(15 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("WIRE-- beginTransmission(AF)", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("WIRE-- write(01)", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("WIRE-- endTransmission()", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- I2C SUCCESS", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("WIRE-- beginTransmission(AF)", Arduino_changes[4].c_str());
+    STRCMP_EQUAL("WIRE-- write(12)", Arduino_changes[5].c_str());
+    STRCMP_EQUAL("WIRE-- write(03)", Arduino_changes[6].c_str());
+    STRCMP_EQUAL("WIRE-- endTransmission()", Arduino_changes[7].c_str());
+    STRCMP_EQUAL("SERIAL-- I2C SUCCESS", Arduino_changes[8].c_str());
+    STRCMP_EQUAL("WIRE-- beginTransmission(AF)", Arduino_changes[9].c_str());
+    STRCMP_EQUAL("WIRE-- write(12)", Arduino_changes[10].c_str());
+    STRCMP_EQUAL("WIRE-- write(03)", Arduino_changes[11].c_str());
+    STRCMP_EQUAL("WIRE-- write(45)", Arduino_changes[12].c_str());
+    STRCMP_EQUAL("WIRE-- endTransmission()", Arduino_changes[13].c_str());
+    STRCMP_EQUAL("SERIAL-- I2C SUCCESS", Arduino_changes[14].c_str());
+}
+
+
+TEST(I2CDevice, write_handles_error_codes) {
+    Wire_transmissionError = 1;
+    Arduino_set_input("i2c write af 01\n");
+    devices->loop();
+    CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("WIRE-- beginTransmission(AF)", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("WIRE-- write(01)", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("WIRE-- endTransmission()", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR data too long to fit in transmit buffer WHEN i2c write af 01", Arduino_changes[3].c_str());
+
+    Arduino_changes_reset();
+    Wire_transmissionError = 2;
+    Arduino_set_input("i2c write af 01\n");
+    devices->loop();
+    CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("WIRE-- beginTransmission(AF)", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("WIRE-- write(01)", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("WIRE-- endTransmission()", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR received NACK on transmit of address WHEN i2c write af 01", Arduino_changes[3].c_str());
+
+    Arduino_changes_reset();
+    Wire_transmissionError = 3;
+    Arduino_set_input("i2c write af 01\n");
+    devices->loop();
+    CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("WIRE-- beginTransmission(AF)", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("WIRE-- write(01)", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("WIRE-- endTransmission()", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR received NACK on transmit of data WHEN i2c write af 01", Arduino_changes[3].c_str());
+
+    Arduino_changes_reset();
+    Wire_transmissionError = 4;
+    Arduino_set_input("i2c write af 01\n");
+    devices->loop();
+    CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("WIRE-- beginTransmission(AF)", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("WIRE-- write(01)", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("WIRE-- endTransmission()", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR other transmit error WHEN i2c write af 01", Arduino_changes[3].c_str());
+
+    Arduino_changes_reset();
+    Wire_transmissionError = 5;
+    Arduino_set_input("i2c write af 01\n");
+    devices->loop();
+    CHECK_TEXT(4 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("WIRE-- beginTransmission(AF)", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("WIRE-- write(01)", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("WIRE-- endTransmission()", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- ERROR other transmit error WHEN i2c write af 01", Arduino_changes[3].c_str());
+}
+
+
+TEST(I2CDevice, write_works) {
+    Arduino_set_input(
+            "i2c write af 00\n"
+            "i2c write af ff,12\n"
+            "i2c write af fedcba\n"
+    );
+    devices->loop();
+    CHECK_TEXT(15 == Arduino_changes.size(), "wrong number of changes");
+    STRCMP_EQUAL("WIRE-- beginTransmission(AF)", Arduino_changes[0].c_str());
+    STRCMP_EQUAL("WIRE-- write(00)", Arduino_changes[1].c_str());
+    STRCMP_EQUAL("WIRE-- endTransmission()", Arduino_changes[2].c_str());
+    STRCMP_EQUAL("SERIAL-- I2C SUCCESS", Arduino_changes[3].c_str());
+    STRCMP_EQUAL("WIRE-- beginTransmission(AF)", Arduino_changes[4].c_str());
+    STRCMP_EQUAL("WIRE-- write(FF)", Arduino_changes[5].c_str());
+    STRCMP_EQUAL("WIRE-- write(12)", Arduino_changes[6].c_str());
+    STRCMP_EQUAL("WIRE-- endTransmission()", Arduino_changes[7].c_str());
+    STRCMP_EQUAL("SERIAL-- I2C SUCCESS", Arduino_changes[8].c_str());
+    STRCMP_EQUAL("WIRE-- beginTransmission(AF)", Arduino_changes[9].c_str());
+    STRCMP_EQUAL("WIRE-- write(FE)", Arduino_changes[10].c_str());
+    STRCMP_EQUAL("WIRE-- write(DC)", Arduino_changes[11].c_str());
+    STRCMP_EQUAL("WIRE-- write(BA)", Arduino_changes[12].c_str());
+    STRCMP_EQUAL("WIRE-- endTransmission()", Arduino_changes[13].c_str());
+    STRCMP_EQUAL("SERIAL-- I2C SUCCESS", Arduino_changes[14].c_str());
 }
 
 

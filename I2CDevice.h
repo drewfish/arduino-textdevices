@@ -20,37 +20,21 @@ COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
-#include <TextDevices.h>
-#include <I2CDevice.h>
-#include <PulseinDevice.h>
-#include <ShiftersDevice.h>
-#include <ShortcutsDevice.h>
-#include <TimersDevice.h>
-#include <WatchersDevice.h>
+#ifndef TEXTDEVICES_I2CDEVICE
+#define TEXTDEVICES_I2CDEVICE
 
-using namespace TextDevices;
+#include "TextDevices.h"
+namespace TextDevices {
 
-Devices             devices;
-I2CDevice           i2c;
-PulseinDevice       pulsein;
-ShiftersDevice      shifters;
-ShortcutsDevice     shortcuts;
-TimersDevice        timers;
-WatchersDevice      watchers;
+    class I2CDevice: public IDevice {
+        private:
+            void write(API*, Command*);
+            void read(API*, Command*);
+        public:
+            void poll(API*, Command*, uint32_t);
+            bool dispatch(API*, Command*);
+    };
 
-void setup() {
-    Serial.begin(9600);
-    devices.setup(&Serial);
-    devices.registerDevice(&i2c);
-    devices.registerDevice(&pulsein);
-    devices.registerDevice(&shifters);
-    devices.registerDevice(&shortcuts);
-    devices.registerDevice(&timers);
-    devices.registerDevice(&watchers);
-    Serial.println(F("----BOOTED----"));
 }
 
-void loop() {
-    devices.loop();
-}
-
+#endif

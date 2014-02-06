@@ -464,6 +464,19 @@ namespace TextDevices {
 
 
     bool
+    API::claimPin(Command* command, uint8_t pinNum) {
+        for (size_t p = 0; p < TEXTDEVICES_PINCOUNT; p++) {
+            RawPin *raw = &(this->_d->pins[p]);
+            if (raw->hwPin == pinNum) {
+                return this->claimPin(command, raw);
+            }
+        }
+        this->error(command, F("unknown pin"));
+        return false;
+    }
+
+
+    bool
     API::unclaimPin(Command* command, RawPin* pin) {
         if (pin->claimant != command->device) {
             this->error(command, F("device tried to unclaim a pin that it didn't own"));
@@ -471,6 +484,19 @@ namespace TextDevices {
         }
         pin->claimant = &(this->_d->pinsDevice);
         return true;
+    }
+
+
+    bool
+    API::unclaimPin(Command* command, uint8_t pinNum) {
+        for (size_t p = 0; p < TEXTDEVICES_PINCOUNT; p++) {
+            RawPin *raw = &(this->_d->pins[p]);
+            if (raw->hwPin == pinNum) {
+                return this->unclaimPin(command, raw);
+            }
+        }
+        this->error(command, F("unknown pin"));
+        return false;
     }
 
 
@@ -501,7 +527,19 @@ namespace TextDevices {
 
 
     void
+    API::print(Command* command, const __FlashStringHelper* msg) {
+        this->_d->stream->print(msg);
+    }
+
+
+    void
     API::println(Command* command, const char* msg) {
+        this->_d->stream->println(msg);
+    }
+
+
+    void
+    API::println(Command* command, const __FlashStringHelper* msg) {
         this->_d->stream->println(msg);
     }
 
