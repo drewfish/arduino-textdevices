@@ -301,11 +301,6 @@ namespace TextDevices {
     }
 
 
-    // These aren't registered during setup() but are available afterwards.
-    //devices->registerDevice(new PulseinDevice());
-    //devices->registerDevice(new ShiftersDevice(count));
-    //devices->registerDevice(new TimersDevice(count));
-    //devices->registerDevice(new WatchersDevice());
     void
     Devices::registerDevice(IDevice* device) {
         char buffer[15];
