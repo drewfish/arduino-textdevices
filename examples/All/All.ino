@@ -22,6 +22,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <TextDevices.h>
+#include <Wire.h>
+#include <I2CDevice.h>
 #include <PulseinDevice.h>
 #include <ShiftersDevice.h>
 #include <ShortcutsDevice.h>
@@ -29,6 +31,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <WatchersDevice.h>
 
 TextDevices::Devices            devices;
+TextDevices::I2CDevice          i2cDevice;
 TextDevices::PulseinDevice      pulseinDevice;
 TextDevices::ShiftersDevice     shiftersDevice;
 TextDevices::ShortcutsDevice    shortcutsDevice;
@@ -38,6 +41,7 @@ TextDevices::WatchersDevice     watchersDevice;
 void setup() {
     Serial.begin(9600);
     devices.setup(&Serial);
+    devices.registerDevice(&i2cDevice);
     devices.registerDevice(&pulseinDevice);
     devices.registerDevice(&shiftersDevice);
     devices.registerDevice(&shortcutsDevice);
